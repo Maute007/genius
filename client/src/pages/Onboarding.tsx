@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { Card } from "@/components/ui/card";
 import { APP_LOGO } from "@/const";
 import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 
 const PROVINCES = [
   "Maputo Cidade", "Maputo Província", "Gaza", "Inhambane",
@@ -27,6 +29,7 @@ const INTEREST_OPTIONS = [
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
+  const { user, login } = useGeniusAuth();
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
@@ -34,6 +37,12 @@ export default function Onboarding() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [province, setProvince] = useState("");
   const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    if (user?.name) {
+      setFullName(user.name);
+    }
+  }, [user]);
 
   const toggleInterest = (interest: string) => {
     setSelectedInterests((prev) =>
@@ -64,18 +73,42 @@ export default function Onboarding() {
   };
 
   const handleComplete = async () => {
+    if (!user) {
+      toast.error("Utilizador não encontrado");
+      return;
+    }
+
     setIsPending(true);
     try {
-      const currentUser = localStorage.getItem("genius_user");
-      if (currentUser) {
-        const user = JSON.parse(currentUser);
-        user.name = fullName;
-        localStorage.setItem("genius_user", JSON.stringify(user));
-      }
+      const userId = parseInt(user.id, 10);
+      
+      await api.profiles.update(userId, {
+        name: fullName,
+        age: parseInt(age, 10),
+        grade: grade,
+        interests: selectedInterests.join(','),
+        province: province || undefined,
+        onboardingCompleted: true,
+      });
+
+      const updatedUser = {
+        ...user,
+        name: fullName,
+        age: parseInt(age, 10),
+        grade: grade,
+        interests: selectedInterests.join(','),
+        province: province,
+        onboardingCompleted: true,
+      };
+      
+      const token = localStorage.getItem("genius_token") || "local-token";
+      login(updatedUser, token);
+
       toast.success("Perfil criado com sucesso!");
       setLocation("/chat");
-    } catch {
-      toast.error("Erro ao criar perfil");
+    } catch (error: any) {
+      console.error("Error saving profile:", error);
+      toast.error(error.message || "Erro ao criar perfil");
     } finally {
       setIsPending(false);
     }

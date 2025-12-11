@@ -58,6 +58,11 @@ export interface Profile {
   userId: number;
   name: string | null;
   email: string | null;
+  age: number | null;
+  grade: string | null;
+  interests: string | null;
+  province: string | null;
+  onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,10 +75,15 @@ export interface ChatResponse {
 
 export const api = {
   chat: {
-    send: (message: string, mode: string, history: Array<{ role: string; content: string }> = []) =>
+    send: (
+      message: string, 
+      mode: string, 
+      history: Array<{ role: string; content: string }> = [],
+      userProfile?: { name?: string; age?: number; grade?: string; interests?: string; province?: string }
+    ) =>
       request<ChatResponse>('/chat', {
         method: 'POST',
-        body: JSON.stringify({ message, mode, history }),
+        body: JSON.stringify({ message, mode, history, userProfile }),
       }),
   },
 
@@ -125,7 +135,15 @@ export const api = {
   profiles: {
     get: (userId: number) => request<Profile>(`/profiles/${userId}`),
     
-    update: (userId: number, data: { name?: string; email?: string }) =>
+    update: (userId: number, data: { 
+      name?: string; 
+      email?: string;
+      age?: number;
+      grade?: string;
+      interests?: string;
+      province?: string;
+      onboardingCompleted?: boolean;
+    }) =>
       request<Profile>(`/profiles/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),

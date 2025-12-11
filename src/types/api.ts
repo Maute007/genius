@@ -36,4 +36,9 @@ export interface UpdateMessageInput {
 export interface UpdateProfileInput {
   name?: string;
   email?: string;
+  age?: number;
+  grade?: string;
+  interests?: string;
+  province?: string;
+  onboardingCompleted?: boolean;
 }

@@ -3,7 +3,7 @@ import { Profile } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { UpdateProfileInput } from '../types/api.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/:userId', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -30,7 +30,7 @@ router.get('/:userId', async (req: Request, res: Response, next: NextFunction): 
 router.put('/:userId', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { userId } = req.params;
-    const { name, email } = req.body as UpdateProfileInput;
+    const { name, email, age, grade, interests, province, onboardingCompleted } = req.body as UpdateProfileInput;
     const userIdNum = parseInt(userId, 10);
 
     if (isNaN(userIdNum)) {
@@ -44,22 +44,34 @@ router.put('/:userId', async (req: Request, res: Response, next: NextFunction): 
       profile = await Profile.create({ userId: userIdNum });
     }
 
-    const updates: Partial<UpdateProfileInput> = {};
+    const updates: Record<string, unknown> = {};
 
     if (name !== undefined) {
-      if (typeof name !== 'string') {
-        sendError(res, 'Field "name" must be a string.', 400);
-        return;
-      }
-      updates.name = name.trim() || null;
+      updates.name = typeof name === 'string' ? name.trim() || null : null;
     }
 
     if (email !== undefined) {
-      if (typeof email !== 'string') {
-        sendError(res, 'Field "email" must be a string.', 400);
-        return;
-      }
-      updates.email = email.trim() || null;
+      updates.email = typeof email === 'string' ? email.trim() || null : null;
+    }
+
+    if (age !== undefined) {
+      updates.age = typeof age === 'number' ? age : null;
+    }
+
+    if (grade !== undefined) {
+      updates.grade = typeof grade === 'string' ? grade.trim() || null : null;
+    }
+
+    if (interests !== undefined) {
+      updates.interests = typeof interests === 'string' ? interests : null;
+    }
+
+    if (province !== undefined) {
+      updates.province = typeof province === 'string' ? province.trim() || null : null;
+    }
+
+    if (onboardingCompleted !== undefined) {
+      updates.onboardingCompleted = Boolean(onboardingCompleted);
     }
 
     await profile.update(updates);

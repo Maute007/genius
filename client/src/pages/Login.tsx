@@ -28,16 +28,20 @@ export default function Login() {
 
     setIsPending(true);
     try {
+      const email = identifier.includes("@") ? identifier : `${identifier}@genius.mz`;
+      const numericId = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0) % 1000000) + 1;
+      
       const mockUser = {
-        id: String(Date.now()),
+        id: String(numericId),
         name: identifier.split("@")[0] || "Estudante",
-        email: identifier.includes("@") ? identifier : `${identifier}@genius.mz`,
+        email,
+        onboardingCompleted: false,
       };
       const mockToken = btoa(`${identifier}:${Date.now()}`);
       
       login(mockUser, mockToken);
       toast.success("Bem-vindo de volta!");
-      setLocation("/chat");
+      setLocation("/onboarding");
     } catch (error: any) {
       toast.error(error.message || "Erro ao entrar");
     } finally {

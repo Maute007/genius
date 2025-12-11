@@ -3,7 +3,7 @@ import { Conversation, Message } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { CreateMessageInput, UpdateMessageInput, MessageRole } from '../types/api.js';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 const VALID_ROLES: MessageRole[] = ['user', 'assistant'];
 

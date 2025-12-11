@@ -3,7 +3,7 @@ import { Conversation, Message } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { CreateConversationInput, UpdateConversationInput, ConversationMode } from '../types/api.js';
 
-const router = Router();
+const router: Router = Router();
 
 const VALID_MODES: ConversationMode[] = ['quick_doubt', 'exam_prep', 'revision', 'free_learning'];
 

@@ -1,31 +1,70 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
+import { api } from "@/lib/api";
 
 interface ProtectedRouteProps {
   children: ReactNode;
   redirectTo?: string;
+  requireOnboarding?: boolean;
 }
 
-/**
- * Protected Route Component
- * Blocks access to pages that require authentication
- * Instantly redirects unauthenticated users - NO DELAY
- */
-export function ProtectedRoute({ children, redirectTo = "/login" }: ProtectedRouteProps) {
-  const { user, loading } = useGeniusAuth();
+export function ProtectedRoute({ 
+  children, 
+  redirectTo = "/login",
+  requireOnboarding = false 
+}: ProtectedRouteProps) {
+  const { user, loading, login } = useGeniusAuth();
   const [, setLocation] = useLocation();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(requireOnboarding);
 
   useEffect(() => {
-    // Fast check: if not loading and no user, redirect immediately
     if (!loading && !user) {
       setLocation(redirectTo);
     }
   }, [loading, user, redirectTo, setLocation]);
 
-  // Show nothing while checking auth or redirecting
-  // This prevents flash of protected content
-  if (loading || !user) {
+  useEffect(() => {
+    async function checkOnboarding() {
+      if (!requireOnboarding || !user || loading) return;
+      
+      if (user.onboardingCompleted) {
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      try {
+        const userId = parseInt(user.id, 10);
+        const profile = await api.profiles.get(userId);
+        
+        if (profile.onboardingCompleted) {
+          const updatedUser = {
+            ...user,
+            name: profile.name || user.name,
+            age: profile.age || undefined,
+            grade: profile.grade || undefined,
+            interests: profile.interests || undefined,
+            province: profile.province || undefined,
+            onboardingCompleted: true,
+          };
+          const token = localStorage.getItem("genius_token") || "local-token";
+          login(updatedUser, token);
+          setCheckingOnboarding(false);
+        } else {
+          setLocation("/onboarding");
+        }
+      } catch (error) {
+        console.error("Error checking onboarding:", error);
+        setLocation("/onboarding");
+      }
+    }
+
+    if (user && !loading) {
+      checkOnboarding();
+    }
+  }, [user, loading, requireOnboarding, login, setLocation]);
+
+  if (loading || !user || (requireOnboarding && checkingOnboarding)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10">
         <div className="text-center">
@@ -36,26 +75,19 @@ export function ProtectedRoute({ children, redirectTo = "/login" }: ProtectedRou
     );
   }
 
-  // User is authenticated, show protected content
   return <>{children}</>;
 }
 
-/**
- * Public Only Route Component
- * Redirects authenticated users away from login/register pages
- */
 export function PublicOnlyRoute({ children, redirectTo = "/" }: ProtectedRouteProps) {
   const { user, loading } = useGeniusAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // If user is logged in, redirect away from public pages
     if (!loading && user) {
       setLocation(redirectTo);
     }
   }, [loading, user, redirectTo, setLocation]);
 
-  // Show loading while checking
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-white to-primary/10">
@@ -64,11 +96,9 @@ export function PublicOnlyRoute({ children, redirectTo = "/" }: ProtectedRoutePr
     );
   }
 
-  // If user exists, don't show content (will redirect)
   if (user) {
     return null;
   }
 
-  // User not authenticated, show public content
   return <>{children}</>;
 }

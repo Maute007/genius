@@ -4,7 +4,7 @@ import messagesRouter from './messages.js';
 import profilesRouter from './profiles.js';
 import chatRouter from './chat.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.use('/conversations', conversationsRouter);
 router.use('/conversations/:conversationId/messages', messagesRouter);

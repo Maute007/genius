@@ -6,6 +6,11 @@ export interface GeniusUser {
   email: string;
   role?: "user" | "admin" | "super_admin";
   plan?: "free" | "student" | "student_plus" | "family";
+  onboardingCompleted?: boolean;
+  age?: number;
+  grade?: string;
+  interests?: string;
+  province?: string;
 }
 
 // Fast sync check - no async needed for localStorage

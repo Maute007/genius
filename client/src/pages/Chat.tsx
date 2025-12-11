@@ -231,7 +231,15 @@ export default function Chat() {
         content: msg.content,
       }));
 
-      const aiResponse = await api.chat.send(userContent, mode, history);
+      const userProfile = user ? {
+        name: user.name,
+        age: user.age,
+        grade: user.grade,
+        interests: user.interests,
+        province: user.province,
+      } : undefined;
+
+      const aiResponse = await api.chat.send(userContent, mode, history, userProfile);
 
       await api.messages.create(conversationId, {
         content: aiResponse.content,

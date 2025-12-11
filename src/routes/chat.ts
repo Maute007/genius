@@ -42,9 +42,46 @@ interface ChatMessage {
   content: string;
 }
 
+interface UserProfile {
+  name?: string;
+  age?: number;
+  grade?: string;
+  interests?: string;
+  province?: string;
+}
+
+function buildSystemPrompt(mode: string, userProfile?: UserProfile): string {
+  let basePrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.quick_doubt;
+  
+  if (userProfile && (userProfile.name || userProfile.age || userProfile.grade || userProfile.interests || userProfile.province)) {
+    let userContext = '\n\nInformações sobre o estudante:';
+    
+    if (userProfile.name) {
+      userContext += `\n- Nome: ${userProfile.name}`;
+    }
+    if (userProfile.age) {
+      userContext += `\n- Idade: ${userProfile.age} anos`;
+    }
+    if (userProfile.grade) {
+      userContext += `\n- Classe: ${userProfile.grade}`;
+    }
+    if (userProfile.interests) {
+      userContext += `\n- Interesses: ${userProfile.interests}`;
+    }
+    if (userProfile.province) {
+      userContext += `\n- Província: ${userProfile.province}`;
+    }
+    
+    userContext += '\n\nUsa estas informações para personalizar as tuas respostas e criar exemplos relevantes para o contexto do estudante.';
+    basePrompt += userContext;
+  }
+  
+  return basePrompt;
+}
+
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { message, mode = 'quick_doubt', history = [] } = req.body;
+    const { message, mode = 'quick_doubt', history = [], userProfile } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({
@@ -53,7 +90,7 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    const systemPrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.quick_doubt;
+    const systemPrompt = buildSystemPrompt(mode, userProfile);
 
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
       ...history.map((msg: ChatMessage) => ({

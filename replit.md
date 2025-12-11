@@ -1,7 +1,7 @@
 # Genius - Educational AI Platform
 
 ## Overview
-Genius is an educational AI platform for Mozambican students, featuring a REST API backend with Express/Sequelize and a React frontend with Vite. The platform uses Claude AI (via Anthropic API) for intelligent tutoring.
+Genius is an educational AI platform for Mozambican students, featuring a REST API backend with Express/Sequelize and a React frontend with Vite. The platform uses Claude AI (via Anthropic API) for intelligent tutoring with personalized responses based on student profiles.
 
 ## Tech Stack
 - **Frontend**: React + Vite + TypeScript + Tailwind CSS
@@ -9,6 +9,16 @@ Genius is an educational AI platform for Mozambican students, featuring a REST A
 - **Database**: PostgreSQL (Replit built-in)
 - **AI**: Anthropic Claude API for chat responses
 - **Authentication**: Simple API Key auth + localStorage for user sessions
+
+## Onboarding System
+New users are required to complete an onboarding flow that collects:
+- Full name
+- Age
+- Grade/Class (8ª-12ª or University)
+- Interests (helps personalize AI responses)
+- Province (optional)
+
+This information is stored in the Profile model and used by the AI to provide personalized tutoring responses. Users who haven't completed onboarding are automatically redirected to `/onboarding` when accessing protected routes.
 
 ## Project Structure
 ```

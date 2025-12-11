@@ -6,17 +6,27 @@ export interface ProfileAttributes {
   userId: number;
   name: string | null;
   email: string | null;
+  age: number | null;
+  grade: string | null;
+  interests: string | null;
+  province: string | null;
+  onboardingCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface ProfileCreationAttributes extends Optional<ProfileAttributes, 'id' | 'name' | 'email' | 'createdAt' | 'updatedAt'> {}
+interface ProfileCreationAttributes extends Optional<ProfileAttributes, 'id' | 'name' | 'email' | 'age' | 'grade' | 'interests' | 'province' | 'onboardingCompleted' | 'createdAt' | 'updatedAt'> {}
 
 class Profile extends Model<ProfileAttributes, ProfileCreationAttributes> implements ProfileAttributes {
   declare id: number;
   declare userId: number;
   declare name: string | null;
   declare email: string | null;
+  declare age: number | null;
+  declare grade: string | null;
+  declare interests: string | null;
+  declare province: string | null;
+  declare onboardingCompleted: boolean;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 
@@ -51,6 +61,27 @@ Profile.init(
     email: {
       type: DataTypes.STRING(320),
       allowNull: true,
+    },
+    age: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    grade: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    interests: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    province: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    onboardingCompleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,

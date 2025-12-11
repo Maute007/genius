@@ -33,16 +33,19 @@ export default function Register() {
 
     setIsPending(true);
     try {
+      const numericId = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0) % 1000000) + 1;
+      
       const mockUser = {
-        id: String(Date.now()),
+        id: String(numericId),
         name: email.split("@")[0],
         email,
+        onboardingCompleted: false,
       };
       const mockToken = btoa(`${email}:${Date.now()}`);
       
       login(mockUser, mockToken);
       toast.success("Conta criada com sucesso!");
-      setLocation("/chat");
+      setLocation("/onboarding");
     } catch (error: any) {
       toast.error(error.message || "Erro ao criar conta");
     } finally {

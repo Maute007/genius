@@ -59,12 +59,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/chat">
-        <ProtectedRoute>
+        <ProtectedRoute requireOnboarding>
           <Chat />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard">
-        <ProtectedRoute>
+        <ProtectedRoute requireOnboarding>
           <Dashboard />
         </ProtectedRoute>
       </Route>
@@ -79,12 +79,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/revision">
-        <ProtectedRoute>
+        <ProtectedRoute requireOnboarding>
           <Revision />
         </ProtectedRoute>
       </Route>
       <Route path="/exam-prep">
-        <ProtectedRoute>
+        <ProtectedRoute requireOnboarding>
           <ExamPrep />
         </ProtectedRoute>
       </Route>
