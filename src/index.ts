@@ -1,11 +1,17 @@
 import 'dotenv/config';
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initializeDatabase } from './config/database.js';
 import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares/index.js';
 import apiRoutes from './routes/index.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-const PORT = parseInt(process.env.API_PORT || '3001', 10);
+const isProduction = process.env.NODE_ENV === 'production';
+const PORT = parseInt(process.env.PORT || (isProduction ? '5000' : '3001'), 10);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,7 +22,21 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/v1', apiKeyAuth, apiRoutes);
 
-app.use(notFoundHandler);
+if (isProduction) {
+  const clientDist = path.join(__dirname, '..', 'public');
+  app.use(express.static(clientDist));
+  
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+  
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+} else {
+  app.use(notFoundHandler);
+}
+
 app.use(errorHandler);
 
 async function startServer(): Promise<void> {
