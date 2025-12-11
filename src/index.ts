@@ -5,7 +5,7 @@ import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares/index.j
 import apiRoutes from './routes/index.js';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '5000', 10);
+const PORT = parseInt(process.env.API_PORT || '3001', 10);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

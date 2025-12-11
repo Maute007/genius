@@ -31,6 +31,10 @@ waitForPort = 5000
 outputType = "webview"
 
 [[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
@@ -43,3 +47,7 @@ build = ["npm", "run", "build"]
 
 [userenv.shared]
 API_KEY = "genius-api-key-2024"
+VITE_APP_TITLE = "Genius"
+VITE_APP_LOGO = "/genius-logo.png"
+VITE_ANALYTICS_ENDPOINT = "disabled"
+VITE_ANALYTICS_WEBSITE_ID = ""

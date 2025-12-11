@@ -1,28 +1,37 @@
-# Genius - REST API Backend
+# Genius - Educational AI Platform
 
 ## Overview
-Genius REST API backend built with Express, TypeScript, and Sequelize ORM. Provides CRUD operations for conversations, messages, and profiles.
+Genius is an educational AI platform for Mozambican students, featuring a REST API backend with Express/Sequelize and a React frontend with Vite.
 
 ## Tech Stack
-- **Backend**: Express.js with TypeScript
-- **ORM**: Sequelize
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS
+- **Backend**: Express.js + TypeScript + Sequelize ORM
 - **Database**: PostgreSQL (Replit built-in)
 - **Authentication**: API Key via X-API-Key header
 
 ## Project Structure
 ```
-src/
-  config/         # Database configuration
-  middlewares/    # Authentication and error handling
-  models/         # Sequelize models (Conversation, Message, Profile)
-  routes/         # Express routers for each resource
-  types/          # TypeScript type definitions
-  utils/          # Response helper utilities
-  index.ts        # Main server entry point
+src/                  # Backend API
+  config/             # Database configuration
+  middlewares/        # Authentication and error handling
+  models/             # Sequelize models (Conversation, Message, Profile)
+  routes/             # Express routers for each resource
+  types/              # TypeScript type definitions
+  utils/              # Response helper utilities
+  index.ts            # Main server entry point
+
+client/               # Frontend React app
+  src/
+    _core/            # Core hooks (auth)
+    components/       # UI components
+    contexts/         # React contexts
+    hooks/            # Custom hooks
+    lib/              # API client and utilities
+    pages/            # Page components
 ```
 
 ## Running the Application
-- Development: `npm run dev` - Runs on port 5000
+- Development: `npm run dev` - Runs both frontend (Vite on port 5000) and backend (API on port 3001)
 - Build: `npm run build`
 - Production: `npm run start`
 
@@ -49,21 +58,18 @@ Error: `{ "success": false, "error": "..." }`
 - `POST /conversations` - Create conversation
   - Body: `{ "title": string, "mode": "quick_doubt"|"exam_prep"|"revision"|"free_learning" }`
 - `PUT /conversations/:id` - Update conversation
-  - Body: `{ "title"?: string, "mode"?: string }`
-- `DELETE /conversations/:id` - Delete conversation (cascade deletes messages)
+- `DELETE /conversations/:id` - Delete conversation
 
 #### Messages
-- `GET /conversations/:conversationId/messages` - List messages in conversation
+- `GET /conversations/:conversationId/messages` - List messages
 - `POST /conversations/:conversationId/messages` - Create message
   - Body: `{ "content": string, "role": "user"|"assistant" }`
 - `PUT /conversations/:conversationId/messages/:messageId` - Update message
-  - Body: `{ "content": string }`
 - `DELETE /conversations/:conversationId/messages/:messageId` - Delete message
 
 #### Profiles
 - `GET /profiles/:userId` - Get profile (auto-creates if not exists)
 - `PUT /profiles/:userId` - Update profile
-  - Body: `{ "name"?: string, "email"?: string }`
 
 ### Health Check
 `GET /health` - Returns server status (no auth required)
@@ -71,15 +77,17 @@ Error: `{ "success": false, "error": "..." }`
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string (provided by Replit)
 - `API_KEY` - API key for authentication (default: genius-api-key-2024)
-- `PORT` - Server port (default: 5000)
+- `API_PORT` - Backend API port (default: 3001)
+- `VITE_APP_TITLE` - Application title
+- `VITE_APP_LOGO` - Application logo path
 
-## Model Fields
-
-### Conversation
-- id, title, mode, subject, topic, isActive, createdAt, updatedAt
-
-### Message
-- id, conversationId, content, role, tokens, createdAt, updatedAt
-
-### Profile
-- id, userId, name, email, createdAt, updatedAt
+## Frontend Pages
+- `/` - Home page (landing)
+- `/planos` - Pricing plans
+- `/escolas` - For schools
+- `/sobre` - About us
+- `/contactos` - Contact
+- `/login` - Login page
+- `/register` - Registration
+- `/chat` - Main chat interface (protected)
+- `/dashboard` - User dashboard (protected)
