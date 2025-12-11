@@ -1,250 +1,201 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
+import { integer, pgEnum, pgTable, text, timestamp, varchar, boolean, json, serial } from "drizzle-orm/pg-core";
 
-/**
- * Core user table backing auth flow.
- */
-export const users = mysqlTable("users", {
-  id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+export const roleEnum = pgEnum("role", ["user", "admin", "super_admin"]);
+export const planEnum = pgEnum("plan", ["free", "student", "student_plus", "family"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "expired", "cancelled"]);
+export const schoolTypeEnum = pgEnum("school_type", ["self_learner", "non_student", "public_school", "private_school", "public_university", "private_university", "technical_institute", "other"]);
+export const schoolLeadStatusEnum = pgEnum("school_lead_status", ["not_contacted", "contacted", "interested", "negotiating", "partner", "rejected"]);
+export const conversationModeEnum = pgEnum("conversation_mode", ["quick_doubt", "exam_prep", "revision", "free_learning"]);
+export const messageRoleEnum = pgEnum("message_role", ["user", "assistant", "system"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["mpesa", "emola", "mkesh", "manual"]);
+export const transactionStatusEnum = pgEnum("transaction_status", ["pending", "completed", "failed", "refunded"]);
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  openId: varchar("open_id", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
-  password: varchar("password", { length: 255 }), // Hashed password for direct login
-  emailVerified: boolean("emailVerified").default(false).notNull(), // Email verification status
-  verificationToken: varchar("verificationToken", { length: 255 }), // Token for email verification
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin", "super_admin"]).default("user").notNull(),
+  password: varchar("password", { length: 255 }),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  verificationToken: varchar("verification_token", { length: 255 }),
+  loginMethod: varchar("login_method", { length: 64 }),
+  role: roleEnum("role").default("user").notNull(),
   
-  // Subscription info
-  plan: mysqlEnum("plan", ["free", "student", "student_plus", "family"]).default("free").notNull(),
-  subscriptionStatus: mysqlEnum("subscriptionStatus", ["active", "expired", "cancelled"]).default("active").notNull(),
-  subscriptionExpiresAt: timestamp("subscriptionExpiresAt"),
+  plan: planEnum("plan").default("free").notNull(),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").default("active").notNull(),
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
   
-  // Usage tracking for free plan
-  monthlyQuestionsUsed: int("monthlyQuestionsUsed").default(0).notNull(),
-  lastQuestionResetAt: timestamp("lastQuestionResetAt").defaultNow().notNull(),
+  monthlyQuestionsUsed: integer("monthly_questions_used").default(0).notNull(),
+  lastQuestionResetAt: timestamp("last_question_reset_at").defaultNow().notNull(),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastSignedIn: timestamp("last_signed_in").defaultNow().notNull(),
 });
 
-/**
- * Student profiles - the heart of personalization
- */
-export const profiles = mysqlTable("profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const profiles = pgTable("profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
   
-  // Personal info
-  fullName: varchar("fullName", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }), // For lead capture
-  whatsapp: varchar("whatsapp", { length: 20 }), // For lead capture
-  age: int("age").notNull(),
-  grade: varchar("grade", { length: 50 }).notNull(), // "10ª classe", "3º ano Eng.", etc.
-  interests: json("interests").$type<string[]>().notNull(), // ["futebol", "música", "ciência"]
-  otherInterests: text("otherInterests"), // Free text for interests not in predefined list
-  learningStyle: text("learningStyle"), // Free text about how they like to learn
-  learningPreferences: json("learningPreferences").$type<string[]>(), // Predefined learning methods
-  challenges: text("challenges"), // Academic challenges/difficulties
-  studyGoals: text("studyGoals"), // Academic goals
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  whatsapp: varchar("whatsapp", { length: 20 }),
+  age: integer("age").notNull(),
+  grade: varchar("grade", { length: 50 }).notNull(),
+  interests: json("interests").$type<string[]>().notNull(),
+  otherInterests: text("other_interests"),
+  learningStyle: text("learning_style"),
+  learningPreferences: json("learning_preferences").$type<string[]>(),
+  challenges: text("challenges"),
+  studyGoals: text("study_goals"),
   
-  // School info (for lead generation)
-  schoolName: varchar("schoolName", { length: 255 }).notNull(),
-  schoolType: mysqlEnum("schoolType", ["self_learner", "non_student", "public_school", "private_school", "public_university", "private_university", "technical_institute", "other"]).notNull(),
+  schoolName: varchar("school_name", { length: 255 }).notNull(),
+  schoolType: schoolTypeEnum("school_type").notNull(),
   province: varchar("province", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).notNull(),
-  // classSection removed - not needed
   
-  // Profile completion
-  onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * Schools - aggregated from student profiles
- */
-export const schools = mysqlTable("schools", {
-  id: int("id").autoincrement().primaryKey(),
+export const schools = pgTable("schools", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  normalizedName: varchar("normalizedName", { length: 255 }).notNull(), // For matching/autocomplete
-  type: mysqlEnum("type", ["public_school", "private_school", "public_university", "private_university", "technical_institute", "other"]).notNull(),
+  normalizedName: varchar("normalized_name", { length: 255 }).notNull(),
+  type: schoolTypeEnum("type").notNull(),
   province: varchar("province", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).notNull(),
   
-  // Stats
-  totalStudents: int("totalStudents").default(0).notNull(),
-  activeStudents: int("activeStudents").default(0).notNull(),
+  totalStudents: integer("total_students").default(0).notNull(),
+  activeStudents: integer("active_students").default(0).notNull(),
   
-  // Partnership status
-  isPartner: boolean("isPartner").default(false).notNull(),
-  partnerSince: timestamp("partnerSince"),
+  isPartner: boolean("is_partner").default(false).notNull(),
+  partnerSince: timestamp("partner_since"),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * School leads for B2B sales
- */
-export const schoolLeads = mysqlTable("schoolLeads", {
-  id: int("id").autoincrement().primaryKey(),
-  schoolId: int("schoolId").notNull(),
+export const schoolLeads = pgTable("school_leads", {
+  id: serial("id").primaryKey(),
+  schoolId: integer("school_id").notNull(),
   
-  // Contact info
-  contactPerson: varchar("contactPerson", { length: 255 }),
-  contactEmail: varchar("contactEmail", { length: 320 }),
-  contactPhone: varchar("contactPhone", { length: 50 }),
+  contactPerson: varchar("contact_person", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 320 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
   
-  // Sales pipeline
-  status: mysqlEnum("status", ["not_contacted", "contacted", "interested", "negotiating", "partner", "rejected"]).default("not_contacted").notNull(),
+  status: schoolLeadStatusEnum("status").default("not_contacted").notNull(),
   notes: text("notes"),
-  lastContactDate: timestamp("lastContactDate"),
+  lastContactDate: timestamp("last_contact_date"),
   
-  // Metrics
-  potentialRevenue: int("potentialRevenue").default(0).notNull(), // In MZN
+  potentialRevenue: integer("potential_revenue").default(0).notNull(),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * Conversations - chat sessions
- */
-export const conversations = mysqlTable("conversations", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  profileId: int("profileId").notNull(),
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  profileId: integer("profile_id").notNull(),
   
-  // Conversation metadata
-  title: varchar("title", { length: 255 }), // Auto-generated or user-set
-  mode: mysqlEnum("mode", ["quick_doubt", "exam_prep", "revision", "free_learning"]).notNull(),
-  subject: varchar("subject", { length: 100 }), // "Matemática", "Física", etc.
-  topic: varchar("topic", { length: 255 }), // "Equações do 2º grau"
+  title: varchar("title", { length: 255 }),
+  mode: conversationModeEnum("mode").notNull(),
+  subject: varchar("subject", { length: 100 }),
+  topic: varchar("topic", { length: 255 }),
   
-  // Status
-  isActive: boolean("isActive").default(true).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * Messages - individual chat messages
- */
-export const messages = mysqlTable("messages", {
-  id: int("id").autoincrement().primaryKey(),
-  conversationId: int("conversationId").notNull(),
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull(),
   
-  // Message content
-  role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
+  role: messageRoleEnum("role").notNull(),
   content: text("content").notNull(),
   
-  // Metadata
-  tokens: int("tokens"), // For cost tracking
+  tokens: integer("tokens"),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-/**
- * Learning progress - track what students have mastered
- */
-export const learningProgress = mysqlTable("learningProgress", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
+export const learningProgress = pgTable("learning_progress", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").notNull(),
   
-  // What was learned
   subject: varchar("subject", { length: 100 }).notNull(),
   topic: varchar("topic", { length: 255 }).notNull(),
   
-  // Progress metrics
-  masteryLevel: int("masteryLevel").default(0).notNull(), // 0-100
-  practiceCount: int("practiceCount").default(0).notNull(),
-  correctAnswers: int("correctAnswers").default(0).notNull(),
-  totalAnswers: int("totalAnswers").default(0).notNull(),
+  masteryLevel: integer("mastery_level").default(0).notNull(),
+  practiceCount: integer("practice_count").default(0).notNull(),
+  correctAnswers: integer("correct_answers").default(0).notNull(),
+  totalAnswers: integer("total_answers").default(0).notNull(),
   
-  // Spaced repetition
-  lastReviewedAt: timestamp("lastReviewedAt"),
-  nextReviewAt: timestamp("nextReviewAt"),
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  nextReviewAt: timestamp("next_review_at"),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * Achievements and gamification
- */
-export const achievements = mysqlTable("achievements", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").notNull(),
   
-  // Achievement details
-  type: varchar("type", { length: 100 }).notNull(), // "streak_7_days", "mastered_topic", etc.
+  type: varchar("type", { length: 100 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   icon: varchar("icon", { length: 100 }),
   
-  earnedAt: timestamp("earnedAt").defaultNow().notNull(),
+  earnedAt: timestamp("earned_at").defaultNow().notNull(),
 });
 
-/**
- * Family accounts - link multiple students to parent account
- */
-export const familyMembers = mysqlTable("familyMembers", {
-  id: int("id").autoincrement().primaryKey(),
-  parentUserId: int("parentUserId").notNull(), // The paying account
-  studentProfileId: int("studentProfileId").notNull(),
+export const familyMembers = pgTable("family_members", {
+  id: serial("id").primaryKey(),
+  parentUserId: integer("parent_user_id").notNull(),
+  studentProfileId: integer("student_profile_id").notNull(),
   
-  // Relationship
-  relationship: varchar("relationship", { length: 50 }), // "filho", "filha", "outro"
+  relationship: varchar("relationship", { length: 50 }),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-/**
- * Payment transactions
- */
-export const transactions = mysqlTable("transactions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
   
-  // Transaction details
-  amount: int("amount").notNull(), // In MZN cents (e.g., 50000 = 500 MZN)
+  amount: integer("amount").notNull(),
   currency: varchar("currency", { length: 3 }).default("MZN").notNull(),
   plan: varchar("plan", { length: 50 }).notNull(),
   
-  // Payment method
-  paymentMethod: mysqlEnum("paymentMethod", ["mpesa", "emola", "mkesh", "manual"]).notNull(),
-  paymentReference: varchar("paymentReference", { length: 255 }),
+  paymentMethod: paymentMethodEnum("payment_method").notNull(),
+  paymentReference: varchar("payment_reference", { length: 255 }),
   
-  // Status
-  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
+  status: transactionStatusEnum("status").default("pending").notNull(),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-/**
- * Parent reports - weekly summaries
- */
-export const parentReports = mysqlTable("parentReports", {
-  id: int("id").autoincrement().primaryKey(),
-  parentUserId: int("parentUserId").notNull(),
-  studentProfileId: int("studentProfileId").notNull(),
+export const parentReports = pgTable("parent_reports", {
+  id: serial("id").primaryKey(),
+  parentUserId: integer("parent_user_id").notNull(),
+  studentProfileId: integer("student_profile_id").notNull(),
   
-  // Report period
-  weekStart: timestamp("weekStart").notNull(),
-  weekEnd: timestamp("weekEnd").notNull(),
+  weekStart: timestamp("week_start").notNull(),
+  weekEnd: timestamp("week_end").notNull(),
   
-  // Metrics
-  totalStudyTime: int("totalStudyTime").default(0).notNull(), // In minutes
-  questionsAsked: int("questionsAsked").default(0).notNull(),
-  exercisesCompleted: int("exercisesCompleted").default(0).notNull(),
-  averageAccuracy: int("averageAccuracy").default(0).notNull(), // 0-100
+  totalStudyTime: integer("total_study_time").default(0).notNull(),
+  questionsAsked: integer("questions_asked").default(0).notNull(),
+  exercisesCompleted: integer("exercises_completed").default(0).notNull(),
+  averageAccuracy: integer("average_accuracy").default(0).notNull(),
   
-  // Report data (JSON)
-  reportData: json("reportData").$type<{
+  reportData: json("report_data").$type<{
     subjects: Array<{
       name: string;
       timeSpent: number;
@@ -254,14 +205,12 @@ export const parentReports = mysqlTable("parentReports", {
     areasOfConcern: string[];
   }>(),
   
-  // Delivery status
-  emailSent: boolean("emailSent").default(false).notNull(),
-  emailSentAt: timestamp("emailSentAt"),
+  emailSent: boolean("email_sent").default(false).notNull(),
+  emailSentAt: timestamp("email_sent_at"),
   
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -271,4 +220,3 @@ export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type LearningProgress = typeof learningProgress.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
-

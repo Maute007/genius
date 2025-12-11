@@ -1,11 +1,10 @@
 import { eq, and, or, sql, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, profiles, InsertProfile, schools, conversations, messages, learningProgress } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -30,47 +29,34 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
+    const existingUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
+    
+    if (existingUser.length > 0) {
+      const updateSet: Record<string, unknown> = {};
+      
+      if (user.name !== undefined) updateSet.name = user.name ?? null;
+      if (user.email !== undefined) updateSet.email = user.email ?? null;
+      if (user.loginMethod !== undefined) updateSet.loginMethod = user.loginMethod ?? null;
+      if (user.lastSignedIn !== undefined) updateSet.lastSignedIn = user.lastSignedIn;
+      if (user.role !== undefined) updateSet.role = user.role;
+      
+      if (Object.keys(updateSet).length === 0) {
+        updateSet.lastSignedIn = new Date();
+      }
+      
+      await db.update(users).set(updateSet).where(eq(users.openId, user.openId));
+    } else {
+      const values: InsertUser = {
+        openId: user.openId,
+        name: user.name ?? null,
+        email: user.email ?? null,
+        loginMethod: user.loginMethod ?? null,
+        lastSignedIn: user.lastSignedIn ?? new Date(),
+        role: user.role ?? (user.openId === ENV.ownerOpenId ? 'admin' : 'user'),
+      };
+      
+      await db.insert(users).values(values);
     }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -97,13 +83,12 @@ export async function getUserById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Profile functions
 export async function createProfile(profile: InsertProfile) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(profiles).values(profile);
-  return result;
+  const result = await db.insert(profiles).values(profile).returning();
+  return result[0];
 }
 
 export async function getProfileByUserId(userId: number) {
@@ -121,7 +106,6 @@ export async function updateProfile(userId: number, updates: Partial<InsertProfi
   await db.update(profiles).set(updates).where(eq(profiles.userId, userId));
 }
 
-// School functions
 export async function findOrCreateSchool(schoolData: {
   name: string;
   type: string;
@@ -133,7 +117,6 @@ export async function findOrCreateSchool(schoolData: {
 
   const normalizedName = schoolData.name.toLowerCase().trim();
 
-  // Try to find existing school
   const existing = await db
     .select()
     .from(schools)
@@ -149,8 +132,7 @@ export async function findOrCreateSchool(schoolData: {
     return existing[0];
   }
 
-  // Create new school
-  await db.insert(schools).values({
+  const created = await db.insert(schools).values({
     name: schoolData.name,
     normalizedName,
     type: schoolData.type as any,
@@ -158,19 +140,7 @@ export async function findOrCreateSchool(schoolData: {
     city: schoolData.city,
     totalStudents: 1,
     activeStudents: 1,
-  });
-
-  // Fetch the created school
-  const created = await db
-    .select()
-    .from(schools)
-    .where(
-      and(
-        eq(schools.normalizedName, normalizedName),
-        eq(schools.province, schoolData.province)
-      )
-    )
-    .limit(1);
+  }).returning();
 
   return created[0];
 }
@@ -197,13 +167,12 @@ export async function searchSchools(query: string, limit = 10) {
   const results = await db
     .select()
     .from(schools)
-    .where(sql`${schools.normalizedName} LIKE ${searchTerm}`)
+    .where(sql`${schools.normalizedName} ILIKE ${searchTerm}`)
     .limit(limit);
 
   return results;
 }
 
-// Conversation functions
 export async function createConversation(data: {
   userId: number;
   profileId: number;
@@ -214,24 +183,11 @@ export async function createConversation(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  await db.insert(conversations).values({
+  const created = await db.insert(conversations).values({
     ...data,
     mode: data.mode as any,
     isActive: true,
-  });
-
-  // Fetch the created conversation
-  const created = await db
-    .select()
-    .from(conversations)
-    .where(
-      and(
-        eq(conversations.userId, data.userId),
-        eq(conversations.isActive, true)
-      )
-    )
-    .orderBy(sql`${conversations.createdAt} DESC`)
-    .limit(1);
+  }).returning();
 
   return created[0];
 }
@@ -244,7 +200,7 @@ export async function getActiveConversation(userId: number) {
     .select()
     .from(conversations)
     .where(and(eq(conversations.userId, userId), eq(conversations.isActive, true)))
-    .orderBy(sql`${conversations.updatedAt} DESC`)
+    .orderBy(desc(conversations.updatedAt))
     .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
@@ -258,11 +214,10 @@ export async function getUserConversations(userId: number, limit = 20) {
     .select()
     .from(conversations)
     .where(eq(conversations.userId, userId))
-    .orderBy(sql`${conversations.updatedAt} DESC`)
+    .orderBy(desc(conversations.updatedAt))
     .limit(limit);
 }
 
-// Message functions
 export async function addMessage(data: {
   conversationId: number;
   role: "user" | "assistant" | "system";
@@ -277,14 +232,11 @@ export async function addMessage(data: {
     role: data.role as any,
   });
 
-  // Update conversation timestamp
   await db
     .update(conversations)
     .set({ updatedAt: new Date() })
     .where(eq(conversations.id, data.conversationId));
 
-  // Auto-track learning progress when the user practices
-  // If conversation has subject/topic and a profileId, increment practice
   try {
     if (data.role === "user") {
       const conv = await getConversationById(data.conversationId);
@@ -293,7 +245,6 @@ export async function addMessage(data: {
           profileId: conv.profileId,
           subject: conv.subject || "Geral",
           topic: conv.topic || "Aprendizagem",
-          // Increment practice count and totals (answers)
           totalAnswers: 1,
         });
       }
@@ -330,16 +281,12 @@ export async function deleteConversation(conversationId: number, userId: number)
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Verificar se a conversa pertence ao usuário
   const conversation = await getConversationById(conversationId);
   if (!conversation || conversation.userId !== userId) {
     throw new Error("Conversa não encontrada ou sem permissão");
   }
 
-  // Deletar mensagens primeiro (foreign key)
   await db.delete(messages).where(eq(messages.conversationId, conversationId));
-  
-  // Deletar conversa
   await db.delete(conversations).where(eq(conversations.id, conversationId));
 }
 
@@ -347,15 +294,12 @@ export async function deleteAllConversations(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Buscar todas as conversas do usuário
   const userConversations = await getUserConversations(userId);
   
-  // Deletar mensagens de todas as conversas
   for (const conv of userConversations) {
     await db.delete(messages).where(eq(messages.conversationId, conv.id));
   }
   
-  // Deletar todas as conversas
   await db.delete(conversations).where(eq(conversations.userId, userId));
 }
 
@@ -367,11 +311,10 @@ export async function getConversationMessages(conversationId: number, limit = 50
     .select()
     .from(messages)
     .where(eq(messages.conversationId, conversationId))
-    .orderBy(sql`${messages.createdAt} ASC`)
+    .orderBy(messages.createdAt)
     .limit(limit);
 }
 
-// Backwards-compatible wrappers (some routers expect these exact names)
 export async function getConversationsByUserId(userId: number, limit = 20) {
   return await getUserConversations(userId, limit);
 }
@@ -380,7 +323,6 @@ export async function getMessagesByConversationId(conversationId: number, limit 
   return await getConversationMessages(conversationId, limit);
 }
 
-// Learning progress functions
 export async function updateLearningProgress(data: {
   profileId: number;
   subject: string;
@@ -392,7 +334,6 @@ export async function updateLearningProgress(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Check if progress exists
   const existing = await db
     .select()
     .from(learningProgress)
@@ -406,7 +347,6 @@ export async function updateLearningProgress(data: {
     .limit(1);
 
   if (existing.length > 0) {
-    // Update existing
     const updates: any = {
       practiceCount: sql`${learningProgress.practiceCount} + 1`,
       lastReviewedAt: new Date(),
@@ -427,7 +367,6 @@ export async function updateLearningProgress(data: {
       .set(updates)
       .where(eq(learningProgress.id, existing[0].id));
   } else {
-    // Create new
     await db.insert(learningProgress).values({
       profileId: data.profileId,
       subject: data.subject,
@@ -441,7 +380,6 @@ export async function updateLearningProgress(data: {
   }
 }
 
-// Usage tracking for free plan
 export async function checkAndIncrementQuestionLimit(userId: number): Promise<boolean> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -449,10 +387,8 @@ export async function checkAndIncrementQuestionLimit(userId: number): Promise<bo
   const user = await getUserById(userId);
   if (!user) return false;
 
-  // If not free plan, allow unlimited
   if (user.plan !== "free") return true;
 
-  // Check if we need to reset monthly counter
   const now = new Date();
   const lastReset = new Date(user.lastQuestionResetAt);
   const monthsSinceReset = 
@@ -460,7 +396,6 @@ export async function checkAndIncrementQuestionLimit(userId: number): Promise<bo
     (now.getMonth() - lastReset.getMonth());
 
   if (monthsSinceReset >= 1) {
-    // Reset counter
     await db
       .update(users)
       .set({
@@ -471,12 +406,10 @@ export async function checkAndIncrementQuestionLimit(userId: number): Promise<bo
     return true;
   }
 
-  // Check limit
   if (user.monthlyQuestionsUsed >= 20) {
-    return false; // Limit reached
+    return false;
   }
 
-  // Increment counter
   await db
     .update(users)
     .set({
@@ -487,10 +420,6 @@ export async function checkAndIncrementQuestionLimit(userId: number): Promise<bo
   return true;
 }
 
-
-
-// Authentication functions for password-based login
-
 export async function getUserByEmailOrPhone(identifier: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -498,7 +427,7 @@ export async function getUserByEmailOrPhone(identifier: string) {
   const user = await db
     .select()
     .from(users)
-    .where(or(eq(users.email, identifier), eq(users.email, identifier))) // Check both email (phone stored in email field for now)
+    .where(or(eq(users.email, identifier), eq(users.email, identifier)))
     .limit(1);
 
   return user[0] || null;
@@ -528,15 +457,9 @@ export async function createUser(data: {
     loginMethod: data.loginMethod,
     role: data.role,
     plan: data.plan,
-  });
+  }).returning();
 
-  // Get the created user
-  const userId = Number(result[0].insertId);
-  const user = await getUserById(userId);
-  
-  if (!user) throw new Error("Failed to create user");
-  
-  return user;
+  return result[0];
 }
 
 export async function updateUserPassword(userId: number, hashedPassword: string) {
@@ -558,8 +481,6 @@ export async function updateUserLastSignedIn(userId: number) {
     .set({ lastSignedIn: new Date() })
     .where(eq(users.id, userId));
 }
-
-
 
 export async function getUserByVerificationToken(token: string) {
   const db = await getDb();
@@ -597,7 +518,6 @@ export async function updateUserVerificationToken(userId: number, verificationTo
     .where(eq(users.id, userId));
 }
 
-// Update user subscription details
 export async function updateUserSubscription(
   userId: number,
   subscription: {
@@ -619,9 +539,6 @@ export async function updateUserSubscription(
     .where(eq(users.id, userId));
 }
 
-// Admin Functions
-
-// Get all users (admin only)
 export async function getAllUsers() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -646,7 +563,6 @@ export async function getAllUsers() {
   return allUsers;
 }
 
-// Update user role (super_admin only)
 export async function updateUserRole(
   userId: number,
   role: "user" | "admin" | "super_admin"
@@ -660,7 +576,6 @@ export async function updateUserRole(
     .where(eq(users.id, userId));
 }
 
-// Update user plan (admin only)
 export async function updateUserPlan(
   userId: number,
   plan: "free" | "student" | "student_plus" | "family"
@@ -670,7 +585,7 @@ export async function updateUserPlan(
 
   const expiresAt = plan === "free" 
     ? null 
-    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 dias
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   await db
     .update(users)
@@ -682,7 +597,6 @@ export async function updateUserPlan(
     .where(eq(users.id, userId));
 }
 
-// Check if user is first user (to make super_admin)
 export async function isFirstUser() {
   const db = await getDb();
   if (!db) return false;
@@ -693,5 +607,3 @@ export async function isFirstUser() {
 
   return count[0]?.count === 0;
 }
-// (duplicate conversation/message helper functions removed)
-
