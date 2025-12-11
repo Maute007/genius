@@ -16,6 +16,7 @@ import { APP_LOGO } from "@/const";
 import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { motion, AnimatePresence } from "framer-motion";
 
 const MODES = [
   { value: "quick_doubt", label: "Dúvida Rápida", icon: Zap, description: "Resposta focada" },
@@ -324,8 +325,20 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 className="h-10 w-10 text-primary" />
+          </motion.div>
+          <p className="text-sm text-gray-500">A carregar...</p>
+        </motion.div>
       </div>
     );
   }
@@ -335,12 +348,18 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
       
       <div
         className={`${
@@ -527,22 +546,30 @@ export default function Chat() {
               </p>
             </div>
           ) : (
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
               {messages.map((msg, i) => (
-                <div
+                <motion.div
                   key={msg.id || i}
-                  className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex gap-2 sm:gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Brain className="h-5 w-5 text-primary" />
-                    </div>
+                    <motion.div 
+                      className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    </motion.div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-6 py-4 ${
+                    className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 sm:px-6 sm:py-4 ${
                       msg.role === "user"
-                        ? "bg-primary text-white"
-                        : "bg-white border border-gray-200 text-gray-900"
+                        ? "bg-primary text-white shadow-lg shadow-primary/20"
+                        : "bg-white border border-gray-200 text-gray-900 shadow-sm"
                     }`}
                   >
                     {msg.role === "assistant" ? (
@@ -582,57 +609,98 @@ export default function Chat() {
                     )}
                   </div>
                   {msg.role === "user" && (
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
+                    <motion.div 
+                      className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </motion.div>
                   )}
-                </div>
+                </motion.div>
               ))}
-              {sending && (
-                <div className="flex gap-4 justify-start">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4">
-                    <p className="text-gray-500">A pensar...</p>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {sending && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex gap-2 sm:gap-4 justify-start"
+                  >
+                    <motion.div 
+                      className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-primary" />
+                    </motion.div>
+                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 sm:px-6 sm:py-4 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <motion.span
+                          className="h-2 w-2 rounded-full bg-primary"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.span
+                          className="h-2 w-2 rounded-full bg-primary"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                        />
+                        <motion.span
+                          className="h-2 w-2 rounded-full bg-primary"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        {conversationId && (
-          <div className="border-t border-gray-200 bg-white p-4">
-            <div className="mx-auto flex max-w-3xl gap-4">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Escreve a tua pergunta..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                disabled={sending}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!message.trim() || sending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {sending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {conversationId && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="border-t border-gray-200 bg-white p-3 sm:p-4 safe-area-bottom"
+            >
+              <div className="mx-auto flex max-w-3xl gap-2 sm:gap-4">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Escreve a tua pergunta..."
+                  className="flex-1 h-11 sm:h-12 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={sending}
+                />
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!message.trim() || sending}
+                    className="bg-primary hover:bg-primary/90 h-11 w-11 sm:h-12 sm:w-12 p-0 shadow-lg shadow-primary/25"
+                  >
+                    {sending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

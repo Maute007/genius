@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { APP_LOGO } from "@/const";
-import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
+import { motion, AnimatePresence } from "framer-motion";
 
 const PROVINCES = [
   "Maputo Cidade", "Maputo Província", "Gaza", "Inhambane",
@@ -27,16 +28,40 @@ const INTEREST_OPTIONS = [
   "Desporto", "Culinária", "Dança", "Cinema", "Natureza", "Matemática",
 ];
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 300 : -300,
+    opacity: 0
+  }),
+  center: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 300 : -300,
+    opacity: 0
+  })
+};
+
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { user, login } = useGeniusAuth();
-  const [step, setStep] = useState(1);
+  const [[step, direction], setStepState] = useState([1, 0]);
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [grade, setGrade] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [province, setProvince] = useState("");
   const [isPending, setIsPending] = useState(false);
+
+  const setStep = (newStep: number) => {
+    setStepState([newStep, newStep > step ? 1 : -1]);
+  };
 
   useEffect(() => {
     if (user?.name) {
@@ -115,139 +140,279 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg p-8">
-        <div className="text-center mb-8">
-          <img
-            src={APP_LOGO}
-            alt="Genius"
-            className="h-16 mx-auto mb-4"
-          />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {step === 1 && "Vamos conhecer-te melhor"}
-            {step === 2 && "Quais são os teus interesses?"}
-            {step === 3 && "Estamos quase lá!"}
-          </h1>
-          <div className="flex justify-center gap-2 mt-4">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`h-2 w-16 rounded-full ${
-                  s <= step ? "bg-primary" : "bg-gray-200"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 flex items-center justify-center p-4 overflow-hidden">
+      <motion.div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <motion.div
+          className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/20 via-transparent to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-primary/10 via-transparent to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
 
-        {step === 1 && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="fullName">Nome Completo *</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="O teu nome"
-              />
-            </div>
-            <div>
-              <Label htmlFor="age">Idade *</Label>
-              <Input
-                id="age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="Ex: 16"
-              />
-            </div>
-            <div>
-              <Label htmlFor="grade">Classe *</Label>
-              <Select value={grade} onValueChange={setGrade}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleciona a tua classe" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["8ª", "9ª", "10ª", "11ª", "12ª", "Universitário"].map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            <p className="text-gray-600 text-sm mb-4">
-              Seleciona os teus interesses (ajuda-nos a personalizar a tua experiência)
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {INTEREST_OPTIONS.map((interest) => (
-                <Button
-                  key={interest}
-                  variant={selectedInterests.includes(interest) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleInterest(interest)}
-                >
-                  {interest}
-                </Button>
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-lg relative z-10"
+      >
+        <Card className="w-full p-6 sm:p-8 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <motion.div
+            className="text-center mb-6 sm:mb-8"
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+          >
+            <motion.img
+              src={APP_LOGO}
+              alt="Genius"
+              className="h-14 sm:h-16 mx-auto mb-4"
+              whileHover={{ scale: 1.05 }}
+            />
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={step}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-xl sm:text-2xl font-bold text-gray-900 mb-2"
+              >
+                {step === 1 && "Vamos conhecer-te melhor"}
+                {step === 2 && "Quais são os teus interesses?"}
+                {step === 3 && "Estamos quase lá!"}
+              </motion.h1>
+            </AnimatePresence>
+            
+            <div className="flex justify-center gap-2 mt-4">
+              {[1, 2, 3].map((s) => (
+                <motion.div
+                  key={s}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    s <= step ? "bg-primary w-12 sm:w-16" : "bg-gray-200 w-8 sm:w-10"
+                  }`}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: s * 0.1 }}
+                />
               ))}
             </div>
-          </div>
-        )}
+          </motion.div>
 
-        {step === 3 && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="province">Província</Label>
-              <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleciona a tua província" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVINCES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg flex items-center gap-3">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
-              <p className="text-green-800 text-sm">
-                Tudo pronto! Clica em "Começar" para iniciar a tua jornada.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between mt-8">
-          {step > 1 ? (
-            <Button variant="outline" onClick={handleBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-          ) : (
-            <div />
-          )}
-          
-          {step < 3 ? (
-            <Button onClick={handleNext}>
-              Continuar
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={handleComplete} disabled={isPending}>
-              {isPending ? "A guardar..." : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Começar
-                </>
+          <div className="relative min-h-[240px] sm:min-h-[280px]">
+            <AnimatePresence mode="wait" custom={direction}>
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-4"
+                >
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.1 }}>
+                    <Label htmlFor="fullName" className="text-sm font-medium">Nome Completo *</Label>
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="O teu nome"
+                      className="mt-1.5 h-11 sm:h-12"
+                    />
+                  </motion.div>
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.2 }}>
+                    <Label htmlFor="age" className="text-sm font-medium">Idade *</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      placeholder="Ex: 16"
+                      className="mt-1.5 h-11 sm:h-12"
+                    />
+                  </motion.div>
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.3 }}>
+                    <Label htmlFor="grade" className="text-sm font-medium">Classe *</Label>
+                    <Select value={grade} onValueChange={setGrade}>
+                      <SelectTrigger className="mt-1.5 h-11 sm:h-12">
+                        <SelectValue placeholder="Seleciona a tua classe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["8ª", "9ª", "10ª", "11ª", "12ª", "Universitário"].map((g) => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                </motion.div>
               )}
-            </Button>
-          )}
-        </div>
-      </Card>
+
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-4"
+                >
+                  <p className="text-gray-600 text-sm mb-4">
+                    Seleciona os teus interesses (ajuda-nos a personalizar a tua experiência)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {INTEREST_OPTIONS.map((interest, i) => (
+                      <motion.div
+                        key={interest}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          variant={selectedInterests.includes(interest) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleInterest(interest)}
+                          className={`transition-all duration-200 ${
+                            selectedInterests.includes(interest) 
+                              ? "shadow-md shadow-primary/25" 
+                              : ""
+                          }`}
+                        >
+                          {interest}
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                  {selectedInterests.length > 0 && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-primary font-medium"
+                    >
+                      {selectedInterests.length} interesse{selectedInterests.length !== 1 ? "s" : ""} selecionado{selectedInterests.length !== 1 ? "s" : ""}
+                    </motion.p>
+                  )}
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div
+                  key="step3"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-4"
+                >
+                  <motion.div 
+                    variants={fadeInUp} 
+                    initial="hidden" 
+                    animate="visible"
+                  >
+                    <Label htmlFor="province" className="text-sm font-medium">Província (opcional)</Label>
+                    <Select value={province} onValueChange={setProvince}>
+                      <SelectTrigger className="mt-1.5 h-11 sm:h-12">
+                        <SelectValue placeholder="Seleciona a tua província" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROVINCES.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl flex items-center gap-3 border border-green-100"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+                    </motion.div>
+                    <p className="text-green-800 text-sm">
+                      Tudo pronto! Clica em "Começar" para iniciar a tua jornada.
+                    </p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <motion.div 
+            className="flex justify-between mt-6 sm:mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            {step > 1 ? (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="outline" onClick={handleBack} className="h-11 sm:h-12">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar
+                </Button>
+              </motion.div>
+            ) : (
+              <div />
+            )}
+            
+            {step < 3 ? (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button onClick={handleNext} className="h-11 sm:h-12 shadow-lg shadow-primary/25">
+                  Continuar
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  onClick={handleComplete} 
+                  disabled={isPending}
+                  className="h-11 sm:h-12 shadow-lg shadow-primary/25"
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      A guardar...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Começar
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+          </motion.div>
+        </Card>
+      </motion.div>
     </div>
   );
 }
