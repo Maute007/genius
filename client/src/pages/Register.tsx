@@ -33,17 +33,10 @@ export default function Register() {
 
     setIsPending(true);
     try {
-      const numericId = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0) % 1000000) + 1;
+      const { api } = await import("@/lib/api");
+      const response = await api.auth.register(email, password);
       
-      const mockUser = {
-        id: String(numericId),
-        name: email.split("@")[0],
-        email,
-        onboardingCompleted: false,
-      };
-      const mockToken = btoa(`${email}:${Date.now()}`);
-      
-      login(mockUser, mockToken);
+      login(response.user, response.token);
       toast.success("Conta criada com sucesso!");
       setLocation("/onboarding");
     } catch (error: any) {

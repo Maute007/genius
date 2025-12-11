@@ -73,7 +73,50 @@ export interface ChatResponse {
   tokens: number;
 }
 
+export interface AuthResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    onboardingCompleted: boolean;
+  };
+  token: string;
+  expiresAt: string;
+}
+
+export interface ValidateResponse {
+  valid: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    onboardingCompleted: boolean;
+  };
+  expiresAt: string;
+}
+
 export const api = {
+  auth: {
+    login: (email: string, password: string) =>
+      request<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      }),
+    
+    register: (email: string, password: string) =>
+      request<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      }),
+    
+    logout: () =>
+      request<{ message: string }>('/auth/logout', {
+        method: 'POST',
+      }),
+    
+    validate: () => request<ValidateResponse>('/auth/validate'),
+  },
+
   chat: {
     send: (
       message: string, 

@@ -13,7 +13,6 @@ export interface GeniusUser {
   province?: string;
 }
 
-// Fast sync check - no async needed for localStorage
 function getStoredUser(): GeniusUser | null {
   try {
     const token = localStorage.getItem("genius_token");
@@ -23,29 +22,65 @@ function getStoredUser(): GeniusUser | null {
     
     return JSON.parse(userStr);
   } catch {
-    // If parsing fails, clear invalid data
     localStorage.removeItem("genius_token");
     localStorage.removeItem("genius_user");
     return null;
   }
 }
 
+function clearSession() {
+  localStorage.removeItem("genius_token");
+  localStorage.removeItem("genius_user");
+}
+
 export function useGeniusAuth() {
-  // Initialize with stored user immediately - NO DELAY
   const [user, setUser] = useState<GeniusUser | null>(() => getStoredUser());
-  const [loading, setLoading] = useState(false); // Start as false since we check sync
+  const [loading, setLoading] = useState(true);
+  const [validated, setValidated] = useState(false);
 
-  // Re-check on mount (in case storage changed)
   useEffect(() => {
-    const storedUser = getStoredUser();
-    if (JSON.stringify(storedUser) !== JSON.stringify(user)) {
-      setUser(storedUser);
-    }
-  }, []);
+    async function validateSession() {
+      const token = localStorage.getItem("genius_token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("genius_token");
-    localStorage.removeItem("genius_user");
+      try {
+        const { api } = await import("@/lib/api");
+        const response = await api.auth.validate();
+        
+        if (response.valid) {
+          const updatedUser = {
+            ...response.user,
+            onboardingCompleted: response.user.onboardingCompleted,
+          };
+          localStorage.setItem("genius_user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        } else {
+          clearSession();
+          setUser(null);
+        }
+      } catch {
+        clearSession();
+        setUser(null);
+      } finally {
+        setLoading(false);
+        setValidated(true);
+      }
+    }
+
+    if (!validated) {
+      validateSession();
+    }
+  }, [validated]);
+
+  const logout = useCallback(async () => {
+    try {
+      const { api } = await import("@/lib/api");
+      await api.auth.logout();
+    } catch {}
+    clearSession();
     setUser(null);
     window.location.href = "/";
   }, []);
@@ -54,6 +89,7 @@ export function useGeniusAuth() {
     localStorage.setItem("genius_token", token);
     localStorage.setItem("genius_user", JSON.stringify(userData));
     setUser(userData);
+    setValidated(true);
   }, []);
 
   const state = useMemo(() => ({

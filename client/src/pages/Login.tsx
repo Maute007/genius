@@ -29,19 +29,17 @@ export default function Login() {
     setIsPending(true);
     try {
       const email = identifier.includes("@") ? identifier : `${identifier}@genius.mz`;
-      const numericId = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0) % 1000000) + 1;
+      const { api } = await import("@/lib/api");
+      const response = await api.auth.login(email, password);
       
-      const mockUser = {
-        id: String(numericId),
-        name: identifier.split("@")[0] || "Estudante",
-        email,
-        onboardingCompleted: false,
-      };
-      const mockToken = btoa(`${identifier}:${Date.now()}`);
-      
-      login(mockUser, mockToken);
+      login(response.user, response.token);
       toast.success("Bem-vindo de volta!");
-      setLocation("/onboarding");
+      
+      if (response.user.onboardingCompleted) {
+        setLocation("/chat");
+      } else {
+        setLocation("/onboarding");
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao entrar");
     } finally {

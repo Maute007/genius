@@ -8,7 +8,7 @@ Genius is an educational AI platform for Mozambican students, featuring a REST A
 - **Backend**: Express.js + TypeScript + Sequelize ORM
 - **Database**: PostgreSQL (Replit built-in)
 - **AI**: Anthropic Claude API for chat responses
-- **Authentication**: Simple API Key auth + localStorage for user sessions
+- **Authentication**: Session-based auth with PostgreSQL storage (15-day expiry)
 
 ## Onboarding System
 New users are required to complete an onboarding flow that collects:
