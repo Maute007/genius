@@ -1,0 +1,2 @@
+ALTER TABLE `profiles` MODIFY COLUMN `schoolType` enum('self_learner','non_student','public_school','private_school','public_university','private_university','technical_institute','other') NOT NULL;--> statement-breakpoint
+ALTER TABLE `users` ADD `password` varchar(255);

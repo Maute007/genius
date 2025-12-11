@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1761510755808,
+      "tag": "0000_clean_marten_broadcloak",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1761510932573,
+      "tag": "0001_chubby_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1761525065920,
+      "tag": "0002_tearful_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1761594240699,
+      "tag": "0003_overconfident_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1761657648183,
+      "tag": "0004_supreme_agent_zero",
+      "breakpoints": true
+    }
+  ]
+}
