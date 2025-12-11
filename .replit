@@ -45,7 +45,7 @@ externalPort = 3002
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "dist/index.js"]
+run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
 build = ["npm", "run", "build"]
 
 [userenv]
@@ -62,3 +62,6 @@ FROM_EMAIL = "genius.risetech@gmail.com"
 FROM_NAME = "Genius - AI Tutor"
 CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 CLAUDE_API_VERSION = "2023-06-01"
+
+[userenv.production]
+NODE_ENV = "production"
