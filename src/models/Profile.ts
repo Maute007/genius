@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/database';
+import { sequelize } from '../config/database.js';
 
 export interface ProfileAttributes {
   id: number;
@@ -13,17 +13,21 @@ export interface ProfileAttributes {
 interface ProfileCreationAttributes extends Optional<ProfileAttributes, 'id' | 'name' | 'email' | 'createdAt' | 'updatedAt'> {}
 
 class Profile extends Model<ProfileAttributes, ProfileCreationAttributes> implements ProfileAttributes {
-  public id!: number;
-  public userId!: number;
-  public name!: string | null;
-  public email!: string | null;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: number;
+  declare userId: number;
+  declare name: string | null;
+  declare email: string | null;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
-  public toJSON(): Record<string, unknown> {
-    const values = super.toJSON() as Record<string, unknown>;
-    values.createdAt = (this.createdAt as Date).toISOString();
-    values.updatedAt = (this.updatedAt as Date).toISOString();
+  toJSON() {
+    const values = { ...this.get() } as Record<string, unknown>;
+    if (this.get('createdAt')) {
+      values.createdAt = (this.get('createdAt') as Date).toISOString();
+    }
+    if (this.get('updatedAt')) {
+      values.updatedAt = (this.get('updatedAt') as Date).toISOString();
+    }
     return values;
   }
 }

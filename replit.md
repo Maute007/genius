@@ -1,29 +1,24 @@
-# Genius - AI Learning Platform for Mozambique
+# Genius - REST API Backend
 
 ## Overview
-Genius is an AI-powered educational platform designed specifically for the Mozambican context. It provides personalized learning assistance, exam preparation, and revision tools for students.
+Genius REST API backend built with Express, TypeScript, and Sequelize ORM. Provides CRUD operations for conversations, messages, and profiles.
 
 ## Tech Stack
-- **Frontend**: React 19 with Vite 7, TailwindCSS 4
-- **Backend**: Express + tRPC
-- **Database**: PostgreSQL with Drizzle ORM
-- **Language**: TypeScript
+- **Backend**: Express.js with TypeScript
+- **ORM**: Sequelize
+- **Database**: PostgreSQL (Replit built-in)
+- **Authentication**: API Key via X-API-Key header
 
 ## Project Structure
 ```
-client/           # Frontend React application
-  src/
-    components/   # UI components (shadcn/ui based)
-    pages/        # Page components
-    hooks/        # Custom React hooks
-    lib/          # Utilities (trpc client, utils)
-    contexts/     # React contexts
-server/           # Backend Express server
-  _core/          # Core server utilities
-  routers.ts      # tRPC routers
-  db.ts           # Database operations
-shared/           # Shared types and constants
-drizzle/          # Database schema and migrations
+src/
+  config/         # Database configuration
+  middlewares/    # Authentication and error handling
+  models/         # Sequelize models (Conversation, Message, Profile)
+  routes/         # Express routers for each resource
+  types/          # TypeScript type definitions
+  utils/          # Response helper utilities
+  index.ts        # Main server entry point
 ```
 
 ## Running the Application
@@ -31,29 +26,60 @@ drizzle/          # Database schema and migrations
 - Build: `npm run build`
 - Production: `npm run start`
 
-## Database
-The project uses PostgreSQL (Replit's built-in database).
-- Schema is defined in `drizzle/schema.ts`
-- Migrations: `npm run db:push`
+## API Documentation
 
-## Key Features
-- User authentication (email/password with verification)
-- Student profiles with personalization
-- AI-powered chat for learning assistance
-- Exam preparation mode
-- Revision/review system
-- Learning progress tracking
-- Subscription plans (free, student, student_plus, family)
-- Admin panel for user management
+### Base URL
+`/api/v1`
+
+### Authentication
+All API endpoints require the `X-API-Key` header:
+```
+X-API-Key: genius-api-key-2024
+```
+
+### Response Format
+Success: `{ "success": true, "data": ... }`
+Error: `{ "success": false, "error": "..." }`
+
+### Endpoints
+
+#### Conversations
+- `GET /conversations` - List all conversations
+- `GET /conversations/:id` - Get conversation by ID
+- `POST /conversations` - Create conversation
+  - Body: `{ "title": string, "mode": "quick_doubt"|"exam_prep"|"revision"|"free_learning" }`
+- `PUT /conversations/:id` - Update conversation
+  - Body: `{ "title"?: string, "mode"?: string }`
+- `DELETE /conversations/:id` - Delete conversation (cascade deletes messages)
+
+#### Messages
+- `GET /conversations/:conversationId/messages` - List messages in conversation
+- `POST /conversations/:conversationId/messages` - Create message
+  - Body: `{ "content": string, "role": "user"|"assistant" }`
+- `PUT /conversations/:conversationId/messages/:messageId` - Update message
+  - Body: `{ "content": string }`
+- `DELETE /conversations/:conversationId/messages/:messageId` - Delete message
+
+#### Profiles
+- `GET /profiles/:userId` - Get profile (auto-creates if not exists)
+- `PUT /profiles/:userId` - Update profile
+  - Body: `{ "name"?: string, "email"?: string }`
+
+### Health Check
+`GET /health` - Returns server status (no auth required)
 
 ## Environment Variables
-The application uses environment variables for configuration:
 - `DATABASE_URL` - PostgreSQL connection string (provided by Replit)
-- `JWT_SECRET` / `SESSION_SECRET` - For session management
-- `CLAUDE_API_KEY` - For AI chat functionality
-- `OAUTH_SERVER_URL` - For OAuth integration (optional)
+- `API_KEY` - API key for authentication (default: genius-api-key-2024)
+- `PORT` - Server port (default: 5000)
 
-## Notes
-- The application was originally built for MySQL and has been converted to PostgreSQL for Replit compatibility
-- All hosts are allowed in Vite config for Replit proxy compatibility
-- Server binds to 0.0.0.0:5000 for accessibility
+## Model Fields
+
+### Conversation
+- id, title, mode, subject, topic, isActive, createdAt, updatedAt
+
+### Message
+- id, conversationId, content, role, tokens, createdAt, updatedAt
+
+### Profile
+- id, userId, name, email, createdAt, updatedAt

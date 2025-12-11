@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { Conversation, Message } from '../models';
-import { sendSuccess, sendError } from '../utils/response';
-import { CreateMessageInput, UpdateMessageInput, MessageRole } from '../types/api';
+import { Conversation, Message } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import { CreateMessageInput, UpdateMessageInput, MessageRole } from '../types/api.js';
 
 const router = Router({ mergeParams: true });
 

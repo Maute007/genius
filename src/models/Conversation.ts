@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/database';
+import { sequelize } from '../config/database.js';
 
 export interface ConversationAttributes {
   id: number;
@@ -15,19 +15,23 @@ export interface ConversationAttributes {
 interface ConversationCreationAttributes extends Optional<ConversationAttributes, 'id' | 'subject' | 'topic' | 'isActive' | 'createdAt' | 'updatedAt'> {}
 
 class Conversation extends Model<ConversationAttributes, ConversationCreationAttributes> implements ConversationAttributes {
-  public id!: number;
-  public title!: string;
-  public mode!: 'quick_doubt' | 'exam_prep' | 'revision' | 'free_learning';
-  public subject!: string | null;
-  public topic!: string | null;
-  public isActive!: boolean;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: number;
+  declare title: string;
+  declare mode: 'quick_doubt' | 'exam_prep' | 'revision' | 'free_learning';
+  declare subject: string | null;
+  declare topic: string | null;
+  declare isActive: boolean;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
-  public toJSON(): Record<string, unknown> {
-    const values = super.toJSON() as Record<string, unknown>;
-    values.createdAt = (this.createdAt as Date).toISOString();
-    values.updatedAt = (this.updatedAt as Date).toISOString();
+  toJSON() {
+    const values = { ...this.get() } as Record<string, unknown>;
+    if (this.get('createdAt')) {
+      values.createdAt = (this.get('createdAt') as Date).toISOString();
+    }
+    if (this.get('updatedAt')) {
+      values.updatedAt = (this.get('updatedAt') as Date).toISOString();
+    }
     return values;
   }
 }
@@ -44,8 +48,11 @@ Conversation.init(
       allowNull: false,
     },
     mode: {
-      type: DataTypes.ENUM('quick_doubt', 'exam_prep', 'revision', 'free_learning'),
+      type: DataTypes.STRING(50),
       allowNull: false,
+      validate: {
+        isIn: [['quick_doubt', 'exam_prep', 'revision', 'free_learning']],
+      },
     },
     subject: {
       type: DataTypes.STRING(100),

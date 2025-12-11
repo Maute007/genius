@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
-import { initializeDatabase } from './config/database';
-import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares';
-import apiRoutes from './routes';
+import { initializeDatabase } from './config/database.js';
+import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares/index.js';
+import apiRoutes from './routes/index.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);

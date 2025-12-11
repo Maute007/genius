@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/database';
-import Conversation from './Conversation';
+import { sequelize } from '../config/database.js';
+import Conversation from './Conversation.js';
 
 export interface MessageAttributes {
   id: number;
@@ -15,18 +15,22 @@ export interface MessageAttributes {
 interface MessageCreationAttributes extends Optional<MessageAttributes, 'id' | 'tokens' | 'createdAt' | 'updatedAt'> {}
 
 class Message extends Model<MessageAttributes, MessageCreationAttributes> implements MessageAttributes {
-  public id!: number;
-  public conversationId!: number;
-  public content!: string;
-  public role!: 'user' | 'assistant';
-  public tokens!: number | null;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: number;
+  declare conversationId: number;
+  declare content: string;
+  declare role: 'user' | 'assistant';
+  declare tokens: number | null;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
-  public toJSON(): Record<string, unknown> {
-    const values = super.toJSON() as Record<string, unknown>;
-    values.createdAt = (this.createdAt as Date).toISOString();
-    values.updatedAt = (this.updatedAt as Date).toISOString();
+  toJSON() {
+    const values = { ...this.get() } as Record<string, unknown>;
+    if (this.get('createdAt')) {
+      values.createdAt = (this.get('createdAt') as Date).toISOString();
+    }
+    if (this.get('updatedAt')) {
+      values.updatedAt = (this.get('updatedAt') as Date).toISOString();
+    }
     return values;
   }
 }
@@ -52,8 +56,11 @@ Message.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('user', 'assistant'),
+      type: DataTypes.STRING(20),
       allowNull: false,
+      validate: {
+        isIn: [['user', 'assistant']],
+      },
     },
     tokens: {
       type: DataTypes.INTEGER,

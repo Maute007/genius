@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { Profile } from '../models';
-import { sendSuccess, sendError } from '../utils/response';
-import { UpdateProfileInput } from '../types/api';
+import { Profile } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import { UpdateProfileInput } from '../types/api.js';
 
 const router = Router();
 

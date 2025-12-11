@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import conversationsRouter from './conversations';
-import messagesRouter from './messages';
-import profilesRouter from './profiles';
+import conversationsRouter from './conversations.js';
+import messagesRouter from './messages.js';
+import profilesRouter from './profiles.js';
 
 const router = Router();
 
