@@ -23,12 +23,8 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1', apiKeyAuth, apiRoutes);
 
 if (isProduction) {
-  const clientDist = path.join(__dirname, '..', 'public');
+  const clientDist = path.join(__dirname, 'public');
   app.use(express.static(clientDist));
-  
-  app.get('/', (_req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
   
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
