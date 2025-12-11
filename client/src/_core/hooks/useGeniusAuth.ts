@@ -45,6 +45,12 @@ export function useGeniusAuth() {
     window.location.href = "/";
   }, []);
 
+  const login = useCallback((userData: GeniusUser, token: string) => {
+    localStorage.setItem("genius_token", token);
+    localStorage.setItem("genius_user", JSON.stringify(userData));
+    setUser(userData);
+  }, []);
+
   const state = useMemo(() => ({
     user,
     loading,
@@ -55,6 +61,7 @@ export function useGeniusAuth() {
   return {
     ...state,
     logout,
+    login,
   };
 }
 

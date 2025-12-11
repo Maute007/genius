@@ -62,7 +62,21 @@ export interface Profile {
   updatedAt: string;
 }
 
+export interface ChatResponse {
+  content: string;
+  role: 'assistant';
+  tokens: number;
+}
+
 export const api = {
+  chat: {
+    send: (message: string, mode: string, history: Array<{ role: string; content: string }> = []) =>
+      request<ChatResponse>('/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, mode, history }),
+      }),
+  },
+
   conversations: {
     list: () => request<Conversation[]>('/conversations'),
     

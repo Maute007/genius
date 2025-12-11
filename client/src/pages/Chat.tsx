@@ -205,10 +205,11 @@ export default function Chat() {
   const handleSendMessage = async () => {
     if (!message.trim() || !conversationId) return;
 
+    const userContent = message.trim();
     const userMessage: Message = {
       id: Date.now(),
       conversationId,
-      content: message,
+      content: userContent,
       role: "user",
       tokens: null,
       createdAt: new Date().toISOString(),
@@ -221,12 +222,25 @@ export default function Chat() {
 
     try {
       await api.messages.create(conversationId, {
-        content: message.trim(),
+        content: userContent,
         role: "user",
       });
+
+      const history = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      const aiResponse = await api.chat.send(userContent, mode, history);
+
+      await api.messages.create(conversationId, {
+        content: aiResponse.content,
+        role: "assistant",
+      });
+
       await loadMessages(conversationId);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Erro ao obter resposta da IA");
     } finally {
       setSending(false);
     }

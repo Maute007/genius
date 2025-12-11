@@ -2,11 +2,13 @@ import { Router } from 'express';
 import conversationsRouter from './conversations.js';
 import messagesRouter from './messages.js';
 import profilesRouter from './profiles.js';
+import chatRouter from './chat.js';
 
 const router = Router();
 
 router.use('/conversations', conversationsRouter);
 router.use('/conversations/:conversationId/messages', messagesRouter);
 router.use('/profiles', profilesRouter);
+router.use('/chat', chatRouter);
 
 export default router;

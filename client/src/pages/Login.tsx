@@ -7,34 +7,16 @@ import { Card } from "@/components/ui/card";
 import { APP_LOGO } from "@/const";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { toast } from "sonner";
-import { trpc } from "@/lib/trpc";
+import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [identifier, setIdentifier] = useState(""); // email or phone
+  const { login } = useGeniusAuth();
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const profileGet = trpc.profile.get.useQuery(undefined, { enabled: false });
-  const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: async (data) => {
-      toast.success("Bem-vindo de volta!");
-      // Store token
-      localStorage.setItem("genius_token", data.token);
-      localStorage.setItem("genius_user", JSON.stringify(data.user));
-      // Após login, buscar perfil
-      const profile = await profileGet.refetch();
-      if (!profile.data) {
-        setLocation("/onboarding");
-      } else {
-        setLocation("/dashboard");
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!identifier.trim()) {
       toast.error("Por favor, insere o teu email ou telefone");
       return;
@@ -44,16 +26,28 @@ export default function Login() {
       return;
     }
 
-    loginMutation.mutate({
-      identifier,
-      password,
-    });
+    setIsPending(true);
+    try {
+      const mockUser = {
+        id: String(Date.now()),
+        name: identifier.split("@")[0] || "Estudante",
+        email: identifier.includes("@") ? identifier : `${identifier}@genius.mz`,
+      };
+      const mockToken = btoa(`${identifier}:${Date.now()}`);
+      
+      login(mockUser, mockToken);
+      toast.success("Bem-vindo de volta!");
+      setLocation("/chat");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao entrar");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <img
             src={APP_LOGO}
@@ -69,7 +63,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Form */}
         <div className="space-y-4">
           <div>
             <Label htmlFor="identifier">Email ou Telefone</Label>
@@ -79,7 +72,7 @@ export default function Login() {
               placeholder="exemplo@email.com ou +258 84 123 4567"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              disabled={loginMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
@@ -92,17 +85,17 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              disabled={loginMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
           <Button
             onClick={handleLogin}
-            disabled={loginMutation.isPending}
+            disabled={isPending}
             className="w-full"
             size="lg"
           >
-            {loginMutation.isPending ? (
+            {isPending ? (
               "A entrar..."
             ) : (
               <>
@@ -113,7 +106,6 @@ export default function Login() {
           </Button>
         </div>
 
-        {/* Footer */}
         <div className="mt-6 text-center space-y-4">
           <p className="text-sm text-gray-600">
             Não tens conta?{" "}
@@ -137,4 +129,3 @@ export default function Login() {
     </div>
   );
 }
-

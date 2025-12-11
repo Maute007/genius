@@ -4,45 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { trpc } from "@/lib/trpc";
 import { APP_LOGO } from "@/const";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 
 export default function Register() {
   const [, setLocation] = useLocation();
+  const { login } = useGeniusAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: (data) => {
-      if (data.requiresVerification) {
-        // Save email temporarily for resend functionality
-        localStorage.setItem("genius_pending_email", email);
-        toast.success("Conta criada! Verifica o teu email para continuar.");
-        // Redirect to a verification waiting page
-        setLocation("/verify-email");
-      } else {
-        // Auto-login after registration
-        if (data.token) {
-          localStorage.setItem("genius_token", data.token);
-          localStorage.setItem("genius_user", JSON.stringify({
-            id: data.user.id,
-            name: data.user.name,
-            email: data.user.email,
-          }));
-        }
-        toast.success("Conta criada com sucesso!");
-        setLocation("/onboarding");
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email.trim() || !email.includes("@")) {
       toast.error("Por favor, insere um email válido");
       return;
@@ -56,17 +31,28 @@ export default function Register() {
       return;
     }
 
-    registerMutation.mutate({
-      name: "Usuário", // Temporary name, will be filled in onboarding
-      email,
-      password,
-    });
+    setIsPending(true);
+    try {
+      const mockUser = {
+        id: String(Date.now()),
+        name: email.split("@")[0],
+        email,
+      };
+      const mockToken = btoa(`${email}:${Date.now()}`);
+      
+      login(mockUser, mockToken);
+      toast.success("Conta criada com sucesso!");
+      setLocation("/chat");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar conta");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <img
             src={APP_LOGO}
@@ -82,7 +68,6 @@ export default function Register() {
           </p>
         </div>
 
-        {/* Form */}
         <div className="space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
@@ -92,7 +77,7 @@ export default function Register() {
               placeholder="exemplo@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={registerMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
@@ -104,7 +89,7 @@ export default function Register() {
               placeholder="Mínimo 6 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={registerMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
@@ -117,17 +102,17 @@ export default function Register() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-              disabled={registerMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
           <Button
             onClick={handleRegister}
-            disabled={registerMutation.isPending}
+            disabled={isPending}
             className="w-full"
             size="lg"
           >
-            {registerMutation.isPending ? (
+            {isPending ? (
               "A criar conta..."
             ) : (
               <>
@@ -138,7 +123,6 @@ export default function Register() {
           </Button>
         </div>
 
-        {/* Footer */}
         <div className="mt-6 text-center space-y-4">
           <p className="text-sm text-gray-600">
             Já tens conta?{" "}
@@ -162,4 +146,3 @@ export default function Register() {
     </div>
   );
 }
-
