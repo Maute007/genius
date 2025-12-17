@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, timestamp, varchar, boolean, json, serial } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp, varchar, boolean, json, jsonb, serial } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["user", "admin", "super_admin"]);
 export const planEnum = pgEnum("plan", ["free", "student", "student_plus", "family"]);
@@ -42,10 +42,10 @@ export const profiles = pgTable("profiles", {
   whatsapp: varchar("whatsapp", { length: 20 }),
   age: integer("age").notNull(),
   grade: varchar("grade", { length: 50 }).notNull(),
-  interests: json("interests").$type<string[]>().notNull(),
+  interests: jsonb("interests").$type<string[]>().notNull(),
   otherInterests: text("other_interests"),
   learningStyle: text("learning_style"),
-  learningPreferences: json("learning_preferences").$type<string[]>(),
+  learningPreferences: jsonb("learning_preferences").$type<string[]>(),
   challenges: text("challenges"),
   studyGoals: text("study_goals"),
   
