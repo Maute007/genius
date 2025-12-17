@@ -32,7 +32,7 @@ app.use('/api/trpc', trpcExpress.createExpressMiddleware({
 app.use('/api/v1', apiKeyAuth, apiRoutes);
 
 if (isProduction) {
-  const clientDist = path.join(__dirname, 'public');
+  const clientDist = path.join(__dirname, '..', 'dist', 'public');
   app.use(express.static(clientDist));
   
   app.get('*', (_req, res) => {
