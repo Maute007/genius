@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { APP_LOGO } from "@/const";
-import { ArrowLeft, LogIn, Loader2 } from "lucide-react";
+import { ArrowLeft, LogIn, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 import { motion } from "framer-motion";
@@ -29,14 +29,17 @@ export default function Login() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setError(null);
+    
     if (!identifier.trim()) {
-      toast.error("Por favor, insere o teu email ou telefone");
+      setError("Por favor, insere o teu email ou telefone");
       return;
     }
     if (!password.trim()) {
-      toast.error("Por favor, insere a tua senha");
+      setError("Por favor, insere a tua senha");
       return;
     }
 
@@ -54,8 +57,10 @@ export default function Login() {
       } else {
         setLocation("/onboarding");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao entrar");
+    } catch (err: any) {
+      const message = err.message || "Erro ao entrar. Tenta novamente.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsPending(false);
     }
@@ -122,6 +127,20 @@ export default function Login() {
               Bem-vindo de volta ao Genius!
             </motion.p>
           </motion.div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+            >
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800">Erro ao entrar</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div
             className="space-y-4"

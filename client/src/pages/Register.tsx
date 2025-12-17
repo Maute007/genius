@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { APP_LOGO } from "@/const";
-import { ArrowLeft, Sparkles, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useGeniusAuth } from "@/_core/hooks/useGeniusAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,21 +30,24 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const passwordStrength = password.length >= 6 ? (password.length >= 10 ? "strong" : "medium") : "weak";
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   const handleRegister = async () => {
+    setError(null);
+    
     if (!email.trim() || !email.includes("@")) {
-      toast.error("Por favor, insere um email válido");
+      setError("Por favor, insere um email válido");
       return;
     }
     if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+      setError("A senha deve ter pelo menos 6 caracteres");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      setError("As senhas não coincidem. Verifica se escreveste a mesma senha nos dois campos.");
       return;
     }
 
@@ -56,8 +59,10 @@ export default function Register() {
       login(response.user, response.token);
       toast.success("Conta criada com sucesso!");
       setLocation("/onboarding");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta");
+    } catch (err: any) {
+      const message = err.message || "Erro ao criar conta. Tenta novamente.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsPending(false);
     }
@@ -124,6 +129,20 @@ export default function Register() {
               Junta-te a milhares de estudantes moçambicanos
             </motion.p>
           </motion.div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+            >
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800">Erro ao criar conta</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div
             className="space-y-4"

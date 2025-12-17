@@ -44,7 +44,7 @@ export const authRouter = router({
       const existingUser = await db.getUserByEmailOrPhone(identifier);
       
       if (existingUser) {
-        throw new Error("Utilizador já existe. Faz login em vez disso.");
+        throw new Error("Este email ou telefone já está registado. Vai para a página de login para entrar na tua conta.");
       }
 
       // Hash password
@@ -130,23 +130,18 @@ export const authRouter = router({
       const user = await db.getUserByEmailOrPhone(input.identifier);
 
       if (!user) {
-        throw new Error("Utilizador não encontrado");
+        throw new Error("Conta não encontrada. Verifica se o email ou telefone está correto, ou cria uma nova conta.");
       }
 
       if (!user.password) {
-        throw new Error("Esta conta não tem senha configurada. Usa OAuth para entrar.");
+        throw new Error("Esta conta foi criada com Google/Facebook. Por favor, usa o mesmo método para entrar ou define uma senha nas configurações.");
       }
-
-      // Email verification disabled for development
-      // if (!user.emailVerified) {
-      //   throw new Error("Por favor, verifica o teu email antes de fazer login. Verifica a tua caixa de entrada.");
-      // }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(input.password, user.password);
 
       if (!isValidPassword) {
-        throw new Error("Senha incorreta");
+        throw new Error("Senha incorreta. Verifica se escreveste correctamente. Lembra-te que as senhas são sensíveis a maiúsculas/minúsculas.");
       }
 
       // Generate JWT token (15 days)
