@@ -1,36 +1,4 @@
-const API_BASE_URL = '/api/v1';
-const API_KEY = 'genius-api-key-2024';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-async function request<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = localStorage.getItem('genius_token');
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-
-  const json: ApiResponse<T> = await response.json();
-  
-  if (!json.success) {
-    throw new Error(json.error || 'Request failed');
-  }
-  
-  return json.data as T;
-}
+import { trpc } from "./trpc";
 
 export interface Conversation {
   id: number;
@@ -73,124 +41,185 @@ export interface ChatResponse {
   tokens: number;
 }
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role?: "user" | "admin" | "super_admin";
+  plan?: "free" | "student" | "student_plus" | "family";
+  onboardingCompleted?: boolean;
+}
+
 export interface AuthResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    onboardingCompleted: boolean;
-  };
+  user: AuthUser;
   token: string;
-  expiresAt: string;
+  message?: string;
 }
 
 export interface ValidateResponse {
   valid: boolean;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    onboardingCompleted: boolean;
+  user: AuthUser;
+  expiresAt?: string;
+}
+
+const API_BASE = "/api/trpc";
+
+async function trpcCall<T>(path: string, input: any = null, method: "query" | "mutation" = "query"): Promise<T> {
+  const token = localStorage.getItem("genius_token");
+  
+  const url = method === "query" 
+    ? `${API_BASE}/${path}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`
+    : `${API_BASE}/${path}`;
+  
+  const options: RequestInit = {
+    method: method === "query" ? "GET" : "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   };
-  expiresAt: string;
+  
+  if (method === "mutation" && input !== null) {
+    options.body = JSON.stringify({ json: input });
+  }
+  
+  const response = await fetch(url, options);
+  const json = await response.json();
+  
+  if (json.error) {
+    const errorMessage = json.error.message || json.error.json?.message || "Request failed";
+    throw new Error(errorMessage);
+  }
+  
+  return json.result?.data?.json as T;
 }
 
 export const api = {
   auth: {
-    login: (email: string, password: string) =>
-      request<AuthResponse>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }),
+    login: async (identifier: string, password: string): Promise<AuthResponse> => {
+      return trpcCall<AuthResponse>("auth.login", { identifier, password }, "mutation");
+    },
     
-    register: (email: string, password: string) =>
-      request<AuthResponse>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }),
+    register: async (email: string, password: string, name?: string): Promise<AuthResponse> => {
+      return trpcCall<AuthResponse>("auth.register", { 
+        email, 
+        password, 
+        name: name || email.split("@")[0] 
+      }, "mutation");
+    },
     
-    logout: () =>
-      request<{ message: string }>('/auth/logout', {
-        method: 'POST',
-      }),
+    logout: async () => {
+      return trpcCall("auth.logout", null, "mutation");
+    },
     
-    validate: () => request<ValidateResponse>('/auth/validate'),
+    validate: async (): Promise<ValidateResponse> => {
+      const token = localStorage.getItem("genius_token");
+      if (!token) {
+        return { valid: false, user: { id: "", name: "", email: "" } };
+      }
+      
+      try {
+        const result = await trpcCall<{ valid: boolean; user: any }>(
+          "auth.verifyToken", 
+          { token }, 
+          "query"
+        );
+        
+        if (!result.valid || !result.user) {
+          return { valid: false, user: { id: "", name: "", email: "" } };
+        }
+        
+        const profile = await trpcCall<any>("profile.get", null, "query").catch(() => null);
+        
+        return {
+          valid: true,
+          user: {
+            id: String(result.user.id),
+            name: result.user.name || "",
+            email: result.user.email || "",
+            role: result.user.role as "user" | "admin" | "super_admin" | undefined,
+            plan: result.user.plan as "free" | "student" | "student_plus" | "family" | undefined,
+            onboardingCompleted: profile?.onboardingCompleted ?? false,
+          },
+        };
+      } catch {
+        return { valid: false, user: { id: "", name: "", email: "" } };
+      }
+    },
   },
 
   chat: {
-    send: (
+    send: async (
       message: string, 
-      mode: string, 
-      history: Array<{ role: string; content: string }> = [],
-      userProfile?: { name?: string; age?: number; grade?: string; interests?: string; province?: string }
-    ) =>
-      request<ChatResponse>('/chat', {
-        method: 'POST',
-        body: JSON.stringify({ message, mode, history, userProfile }),
-      }),
+      conversationId: number
+    ) => {
+      return trpcCall<{ message: string }>("chat.sendMessage", { 
+        message, 
+        conversationId 
+      }, "mutation");
+    },
+    
+    createConversation: async (mode: string) => {
+      return trpcCall("chat.createConversation", { mode }, "mutation");
+    },
+    
+    getConversations: async () => {
+      return trpcCall("chat.listConversations", null, "query");
+    },
+    
+    getConversation: async (conversationId: number) => {
+      return trpcCall("chat.getConversationById", { conversationId }, "query");
+    },
+    
+    deleteConversation: async (conversationId: number) => {
+      return trpcCall("chat.deleteConversation", { conversationId }, "mutation");
+    },
+    
+    deleteAllConversations: async () => {
+      return trpcCall("chat.deleteAllConversations", null, "mutation");
+    },
   },
 
-  conversations: {
-    list: () => request<Conversation[]>('/conversations'),
+  profile: {
+    get: async () => {
+      return trpcCall("profile.get", null, "query");
+    },
     
-    get: (id: number) => request<Conversation>(`/conversations/${id}`),
+    update: async (data: any) => {
+      return trpcCall("profile.upsert", data, "mutation");
+    },
     
-    create: (data: { title: string; mode: string }) =>
-      request<Conversation>('/conversations', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    
-    update: (id: number, data: { title?: string; mode?: string }) =>
-      request<Conversation>(`/conversations/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    
-    delete: (id: number) =>
-      request<{ message: string }>(`/conversations/${id}`, {
-        method: 'DELETE',
-      }),
+    searchSchools: async (query: string) => {
+      return trpcCall("profile.searchSchools", { query }, "query");
+    },
   },
 
-  messages: {
-    list: (conversationId: number) =>
-      request<Message[]>(`/conversations/${conversationId}/messages`),
+  subscription: {
+    getStatus: async () => {
+      return trpcCall("subscription.getStatus", null, "query");
+    },
     
-    create: (conversationId: number, data: { content: string; role: string }) =>
-      request<Message>(`/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    
-    update: (conversationId: number, messageId: number, data: { content: string }) =>
-      request<Message>(`/conversations/${conversationId}/messages/${messageId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    
-    delete: (conversationId: number, messageId: number) =>
-      request<{ message: string }>(`/conversations/${conversationId}/messages/${messageId}`, {
-        method: 'DELETE',
-      }),
+    processPayment: async (planId: string, paymentMethod: string, phoneNumber: string) => {
+      return trpcCall("subscription.processMockPayment", { 
+        planId, 
+        paymentMethod, 
+        phoneNumber 
+      }, "mutation");
+    },
   },
 
-  profiles: {
-    get: (userId: number) => request<Profile>(`/profiles/${userId}`),
+  dashboard: {
+    getStats: async () => {
+      return trpcCall("dashboard.stats", null, "query");
+    },
     
-    update: (userId: number, data: { 
-      name?: string; 
-      email?: string;
-      age?: number;
-      grade?: string;
-      interests?: string;
-      province?: string;
-      onboardingCompleted?: boolean;
-    }) =>
-      request<Profile>(`/profiles/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+    getRecentConversations: async (limit = 10) => {
+      return trpcCall("dashboard.recentConversations", { limit }, "query");
+    },
+    
+    getInsights: async () => {
+      return trpcCall("dashboard.personalizedInsights", null, "query");
+    },
   },
 };
 
