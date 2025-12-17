@@ -55,10 +55,13 @@ export async function runMigrations() {
           AND column_name = 'interests' 
           AND data_type = 'text'
         ) THEN
-          UPDATE profiles SET interests = '[]' WHERE interests IS NULL OR interests = '';
-          UPDATE profiles SET interests = '["' || replace(interests::text, ',', '","') || '"]' 
-          WHERE interests IS NOT NULL AND interests NOT LIKE '[%';
-          ALTER TABLE profiles ALTER COLUMN interests TYPE jsonb USING interests::jsonb;
+          ALTER TABLE profiles 
+          ALTER COLUMN interests TYPE jsonb 
+          USING CASE 
+            WHEN interests IS NULL OR interests = '' THEN '[]'::jsonb
+            WHEN interests LIKE '[%' THEN interests::jsonb
+            ELSE jsonb_build_array(interests)
+          END;
         END IF;
       END $$
     `);
