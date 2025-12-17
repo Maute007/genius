@@ -5,6 +5,9 @@ import { fileURLToPath } from 'url';
 import { initializeDatabase } from './config/database.js';
 import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares/index.js';
 import apiRoutes from './routes/index.js';
+import * as trpcExpress from '@trpc/server/adapters/express';
+import { appRouter } from '../server/routers.js';
+import { createContext } from '../server/_core/context.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +22,12 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// tRPC API routes
+app.use('/api/trpc', trpcExpress.createExpressMiddleware({
+  router: appRouter,
+  createContext,
+}));
 
 app.use('/api/v1', apiKeyAuth, apiRoutes);
 
