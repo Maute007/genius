@@ -49,6 +49,8 @@ export const appRouter = router({
           studyGoals: z.string().optional(),
           schoolName: z.string().min(2),
           schoolType: z.enum([
+            "self_learner",
+            "non_student",
             "public_school",
             "private_school",
             "public_university",
