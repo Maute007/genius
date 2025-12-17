@@ -8,6 +8,7 @@ import apiRoutes from './routes/index.js';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from '../server/routers';
 import { createContext } from '../server/_core/context';
+import { runMigrations } from '../server/db';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +48,7 @@ app.use(errorHandler);
 async function startServer(): Promise<void> {
   try {
     await initializeDatabase();
+    await runMigrations();
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`[Server] Running on http://0.0.0.0:${PORT}`);

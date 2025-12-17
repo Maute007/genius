@@ -4,6 +4,7 @@ import { InsertUser, users, profiles, InsertProfile, schools, conversations, mes
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _migrationRan = false;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
@@ -15,6 +16,58 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function runMigrations() {
+  if (_migrationRan) return;
+  _migrationRan = true;
+
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Migration] Database not available, skipping migrations");
+    return;
+  }
+
+  console.log("[Migration] Running schema migrations...");
+
+  try {
+    await db.execute(sql`
+      ALTER TABLE profiles 
+      ADD COLUMN IF NOT EXISTS full_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS other_interests TEXT,
+      ADD COLUMN IF NOT EXISTS learning_style TEXT,
+      ADD COLUMN IF NOT EXISTS learning_preferences JSONB,
+      ADD COLUMN IF NOT EXISTS challenges TEXT,
+      ADD COLUMN IF NOT EXISTS study_goals TEXT,
+      ADD COLUMN IF NOT EXISTS school_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS school_type VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS city VARCHAR(100)
+    `);
+    console.log("[Migration] Profiles table updated");
+
+    await db.execute(sql`
+      DO $$ 
+      BEGIN 
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'profiles' 
+          AND column_name = 'interests' 
+          AND data_type = 'text'
+        ) THEN
+          UPDATE profiles SET interests = '[]' WHERE interests IS NULL OR interests = '';
+          UPDATE profiles SET interests = '["' || replace(interests::text, ',', '","') || '"]' 
+          WHERE interests IS NOT NULL AND interests NOT LIKE '[%';
+          ALTER TABLE profiles ALTER COLUMN interests TYPE jsonb USING interests::jsonb;
+        END IF;
+      END $$
+    `);
+    console.log("[Migration] Interests column migrated to JSONB");
+
+    console.log("[Migration] All migrations completed successfully");
+  } catch (error) {
+    console.error("[Migration] Error running migrations:", error);
+  }
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
