@@ -128,7 +128,7 @@ export default function Onboarding() {
       login(updatedUser, token);
 
       toast.success("Perfil criado com sucesso!");
-      setLocation("/chat");
+      setLocation("/dashboard");
     } catch (error: any) {
       console.error("Error saving profile:", error);
       toast.error(error.message || "Erro ao criar perfil");

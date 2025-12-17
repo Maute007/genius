@@ -53,7 +53,7 @@ export default function Login() {
       toast.success("Bem-vindo de volta!");
       
       if (response.user.onboardingCompleted) {
-        setLocation("/chat");
+        setLocation("/dashboard");
       } else {
         setLocation("/onboarding");
       }
