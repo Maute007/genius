@@ -135,10 +135,7 @@ export default function Login() {
               className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
             >
               <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-800">Erro ao entrar</p>
-                <p className="text-sm text-red-600 mt-1">{error}</p>
-              </div>
+              <p className="text-sm text-red-700 flex-1">{error}</p>
             </motion.div>
           )}
 

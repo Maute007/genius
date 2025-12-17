@@ -64,6 +64,31 @@ export interface ValidateResponse {
 
 const API_BASE = "/api/trpc";
 
+function getFriendlyErrorMessage(error: any): string {
+  const rawMessage = typeof error === "string" ? error : error?.message || "";
+  
+  if (rawMessage.includes("<!DOCTYPE") || rawMessage.includes("not valid JSON") || rawMessage.includes("Unexpected token")) {
+    return "Não foi possível conectar ao servidor. Verifica a tua ligação à internet e tenta novamente.";
+  }
+  if (rawMessage.includes("Failed to fetch") || rawMessage.includes("NetworkError")) {
+    return "Erro de conexão. Verifica a tua ligação à internet.";
+  }
+  if (rawMessage.includes("500") || rawMessage.includes("Internal Server Error")) {
+    return "Ocorreu um erro no servidor. Tenta novamente mais tarde.";
+  }
+  if (rawMessage.includes("401") || rawMessage.includes("Unauthorized")) {
+    return "Sessão expirada. Por favor, faz login novamente.";
+  }
+  if (rawMessage.includes("403") || rawMessage.includes("Forbidden")) {
+    return "Não tens permissão para realizar esta ação.";
+  }
+  if (rawMessage.includes("404") || rawMessage.includes("Not Found")) {
+    return "O recurso solicitado não foi encontrado.";
+  }
+  
+  return rawMessage || "Ocorreu um erro. Tenta novamente.";
+}
+
 async function trpcCall<T>(path: string, input: any = null, method: "query" | "mutation" = "query"): Promise<T> {
   const token = localStorage.getItem("genius_token");
   
@@ -83,12 +108,23 @@ async function trpcCall<T>(path: string, input: any = null, method: "query" | "m
     options.body = JSON.stringify({ json: input });
   }
   
-  const response = await fetch(url, options);
-  const json = await response.json();
+  let response: Response;
+  try {
+    response = await fetch(url, options);
+  } catch (networkError: any) {
+    throw new Error(getFriendlyErrorMessage(networkError));
+  }
+  
+  let json: any;
+  try {
+    json = await response.json();
+  } catch (parseError: any) {
+    throw new Error(getFriendlyErrorMessage(parseError));
+  }
   
   if (json.error) {
-    const errorMessage = json.error.message || json.error.json?.message || "Request failed";
-    throw new Error(errorMessage);
+    const errorMessage = json.error.message || json.error.json?.message || "Erro no pedido";
+    throw new Error(getFriendlyErrorMessage(errorMessage));
   }
   
   return json.result?.data?.json as T;
