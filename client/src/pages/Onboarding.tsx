@@ -105,24 +105,22 @@ export default function Onboarding() {
 
     setIsPending(true);
     try {
-      const userId = parseInt(user.id, 10);
-      
-      await api.profiles.update(userId, {
-        name: fullName,
+      const profileData = {
+        fullName: fullName,
         age: parseInt(age, 10),
         grade: grade,
-        interests: selectedInterests.join(','),
-        province: province || undefined,
-        onboardingCompleted: true,
-      });
+        interests: selectedInterests.length > 0 ? selectedInterests : ["Estudos"],
+        province: province || "Maputo Cidade",
+        city: "A definir",
+        schoolName: "A definir",
+        schoolType: "self_learner" as const,
+      };
+      
+      await api.profile.update(profileData);
 
       const updatedUser = {
         ...user,
         name: fullName,
-        age: parseInt(age, 10),
-        grade: grade,
-        interests: selectedInterests.join(','),
-        province: province,
         onboardingCompleted: true,
       };
       
