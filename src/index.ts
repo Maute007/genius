@@ -6,8 +6,8 @@ import { initializeDatabase } from './config/database.js';
 import { apiKeyAuth, errorHandler, notFoundHandler } from './middlewares/index.js';
 import apiRoutes from './routes/index.js';
 import * as trpcExpress from '@trpc/server/adapters/express';
-import { appRouter } from '../server/routers.js';
-import { createContext } from '../server/_core/context.js';
+import { appRouter } from '../server/routers';
+import { createContext } from '../server/_core/context';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
