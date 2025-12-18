@@ -102,16 +102,18 @@ export const authRouter = router({
 
       return {
         success: true,
-        message: "Conta criada com sucesso! Podes entrar agora.",
+        message: "Conta criada com sucesso! Vamos conhecer-te melhor.",
         requiresVerification: false,
+        requiresOnboarding: true,
         user: {
           id: user.id.toString(),
           name: user.name || "",
           email: user.email || "",
           role: user.role,
           plan: user.plan,
+          onboardingCompleted: false,
         },
-        token, // Auto-login after registration
+        token,
       };
     }),
 
@@ -160,9 +162,9 @@ export const authRouter = router({
       await db.updateUserLastSignedIn(user.id);
 
       // Ensure user has a profile (for existing users created before profile auto-creation)
-      const profile = await db.getProfileByUserId(user.id);
+      let profile = await db.getProfileByUserId(user.id);
       if (!profile) {
-        await db.createProfile({
+        profile = await db.createProfile({
           userId: user.id,
           fullName: user.name || "Utilizador",
           age: 18,
@@ -177,16 +179,23 @@ export const authRouter = router({
         console.log(`✅ Profile criado para utilizador existente: ${user.email}`);
       }
 
+      const onboardingCompleted = profile?.onboardingCompleted ?? false;
+
       return {
+        success: true,
+        requiresOnboarding: !onboardingCompleted,
         user: {
           id: user.id.toString(),
           name: user.name || "",
           email: user.email || "",
           role: user.role,
           plan: user.plan,
+          onboardingCompleted,
         },
         token,
-        message: "Login efetuado com sucesso!",
+        message: onboardingCompleted 
+          ? "Bem-vindo de volta!" 
+          : "Login efetuado! Vamos completar o teu perfil.",
       };
     }),
 
