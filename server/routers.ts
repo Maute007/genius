@@ -1014,6 +1014,12 @@ PROGRESSO: ${progressData.slice(0, 5).map(p => `${p.subject}: ${p.topic} (${p.ma
 
   // Conversations
   conversations: router({
+    // List all conversations for current user
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const conversations = await db.getConversationsByUserId(ctx.user.id);
+      return conversations;
+    }),
+
     // Create a new conversation
     create: protectedProcedure
       .input(
@@ -1069,6 +1075,21 @@ PROGRESSO: ${progressData.slice(0, 5).map(p => `${p.subject}: ${p.topic} (${p.ma
         await db.deleteConversation(input.id, ctx.user.id);
         
         return { success: true };
+      }),
+  }),
+
+  // Messages
+  messages: router({
+    // List messages for a conversation
+    list: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: conversationId }) => {
+        const conversation = await db.getConversationById(conversationId);
+        if (!conversation || conversation.userId !== ctx.user.id) {
+          throw new Error("Conversation not found");
+        }
+        const messages = await db.getMessagesByConversationId(conversationId);
+        return messages;
       }),
   }),
 });
