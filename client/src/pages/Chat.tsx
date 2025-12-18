@@ -25,130 +25,122 @@ const MODES = [
   { value: "free_learning", label: "Aprendizagem Livre", icon: Sparkles, description: "Explorar" },
 ];
 
+const MODE_COLORS: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
+  quick_doubt: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", gradient: "from-amber-500 to-orange-500" },
+  exam_prep: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", gradient: "from-blue-500 to-indigo-500" },
+  revision: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", gradient: "from-emerald-500 to-teal-500" },
+  free_learning: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", gradient: "from-purple-500 to-pink-500" },
+};
+
 function ConversationItem({
   conversation,
   isActive,
-  icon: Icon,
   onSelect,
-  onTitleUpdate,
   onDelete,
 }: {
-  conversation: Conversation;
+  conversation: Conversation & { firstMessagePreview?: string | null };
   isActive: boolean;
-  icon: any;
   onSelect: () => void;
-  onTitleUpdate: () => void;
   onDelete: () => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(conversation.title || "");
   const [showDelete, setShowDelete] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleSaveTitle = async () => {
-    if (editedTitle.trim() && editedTitle !== conversation.title) {
-      setIsSaving(true);
-      try {
-        await api.conversations.update(conversation.id, { title: editedTitle.trim() });
-        setIsEditing(false);
-        onTitleUpdate();
-        toast.success("Título atualizado!");
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setIsSaving(false);
-      }
-    } else {
-      setIsEditing(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSaveTitle();
-    } else if (e.key === "Escape") {
-      setEditedTitle(conversation.title || "");
-      setIsEditing(false);
-    }
-  };
-
-  const displayTitle = conversation.title || "Nova Conversa";
+  
+  const mode = MODES.find(m => m.value === conversation.mode);
+  const ModeIcon = mode?.icon || MessageSquare;
+  const modeColors = MODE_COLORS[conversation.mode] || MODE_COLORS.quick_doubt;
+  
+  const displayTitle = conversation.firstMessagePreview 
+    ? (conversation.firstMessagePreview.length > 45 
+        ? conversation.firstMessagePreview.slice(0, 45) + "..." 
+        : conversation.firstMessagePreview)
+    : "Nova conversa";
+    
   const displayDate = new Date(conversation.createdAt).toLocaleDateString("pt-PT", {
     day: "2-digit",
     month: "short",
   });
 
+  const timeAgo = () => {
+    const now = new Date();
+    const created = new Date(conversation.updatedAt || conversation.createdAt);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return "agora";
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    return `${diffDays}d`;
+  };
+
   return (
-    <div
-      className={`w-full rounded-lg p-3 transition-colors ${
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 cursor-pointer group ${
         isActive
-          ? "bg-primary/10 text-primary"
-          : "hover:bg-gray-100 text-gray-700"
+          ? "bg-gradient-to-r from-primary/10 to-primary/5 ring-2 ring-primary/30 shadow-lg shadow-primary/10"
+          : "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-md"
       }`}
+      onClick={onSelect}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
     >
-      <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 mt-1 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              onBlur={handleSaveTitle}
-              onKeyDown={handleKeyDown}
-              className="w-full text-sm font-medium bg-white border border-primary rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-              disabled={isSaving}
-            />
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isActive) {
-                  setIsEditing(true);
-                } else {
-                  onSelect();
-                }
-              }}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              className="w-full text-left"
-            >
-              <p className="text-sm font-medium truncate">
+      {isActive && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/60" />
+      )}
+      
+      <div className="p-3 pl-4">
+        <div className="flex items-start gap-3">
+          <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${modeColors.gradient} shadow-lg`}>
+            <ModeIcon className="h-5 w-5 text-white" />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <p className={`text-sm font-medium leading-tight line-clamp-2 ${isActive ? "text-gray-900" : "text-gray-700"}`}>
                 {displayTitle}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <span className="flex-shrink-0 text-[10px] text-gray-400 font-medium">
+                {timeAgo()}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${modeColors.bg} ${modeColors.text} border ${modeColors.border}`}>
+                <ModeIcon className="h-2.5 w-2.5" />
+                {mode?.label || "Chat"}
+              </span>
+              <span className="text-[10px] text-gray-400">
                 {displayDate}
-              </p>
-            </button>
-          )}
+              </span>
+            </div>
+          </div>
         </div>
-        {showDelete && !isEditing && (
-          <button
+      </div>
+
+      <AnimatePresence>
+        {showDelete && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className="flex-shrink-0 p-1 hover:bg-red-100 rounded transition-colors"
+            className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm"
             title="Apagar conversa"
           >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+          </motion.button>
         )}
-      </div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -414,26 +406,24 @@ export default function Chat() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2">
-          <div className="space-y-1">
-            {conversations.map((conv) => {
-              const convMode = MODES.find(m => m.value === conv.mode);
-              const ConvIcon = convMode?.icon || MessageSquare;
-              const isActive = conv.id === conversationId;
-              
-              return (
-                <ConversationItem
-                  key={conv.id}
-                  conversation={conv}
-                  isActive={isActive}
-                  icon={ConvIcon}
-                  onSelect={() => handleSelectConversation(conv.id)}
-                  onTitleUpdate={() => loadConversations()}
-                  onDelete={() => handleDeleteConversation(conv.id)}
-                />
-              );
-            })}
-          </div>
+        <div className="flex-1 overflow-y-auto px-3 py-2">
+          <AnimatePresence mode="popLayout">
+            <div className="space-y-2">
+              {conversations.map((conv) => {
+                const isActive = conv.id === conversationId;
+                
+                return (
+                  <ConversationItem
+                    key={conv.id}
+                    conversation={conv as any}
+                    isActive={isActive}
+                    onSelect={() => handleSelectConversation(conv.id)}
+                    onDelete={() => handleDeleteConversation(conv.id)}
+                  />
+                );
+              })}
+            </div>
+          </AnimatePresence>
         </div>
 
         <div className="border-t border-gray-200 p-4">

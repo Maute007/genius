@@ -448,12 +448,30 @@ export async function getUserConversations(userId: number, limit = 20) {
   const db = await getDb();
   if (!db) return [];
 
-  return await db
+  const convs = await db
     .select()
     .from(conversations)
     .where(eq(conversations.userId, userId))
     .orderBy(desc(conversations.updatedAt))
     .limit(limit);
+
+  const convsWithPreview = await Promise.all(
+    convs.map(async (conv) => {
+      const firstMsg = await db
+        .select()
+        .from(messages)
+        .where(and(eq(messages.conversationId, conv.id), eq(messages.role, 'user')))
+        .orderBy(messages.createdAt)
+        .limit(1);
+
+      return {
+        ...conv,
+        firstMessagePreview: firstMsg.length > 0 ? firstMsg[0].content.slice(0, 80) : null,
+      };
+    })
+  );
+
+  return convsWithPreview;
 }
 
 export async function addMessage(data: {
