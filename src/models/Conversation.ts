@@ -3,6 +3,8 @@ import { sequelize } from '../config/database.js';
 
 export interface ConversationAttributes {
   id: number;
+  userId: number;
+  profileId: number;
   title: string;
   mode: 'quick_doubt' | 'exam_prep' | 'revision' | 'free_learning';
   subject: string | null;
@@ -16,6 +18,8 @@ interface ConversationCreationAttributes extends Optional<ConversationAttributes
 
 class Conversation extends Model<ConversationAttributes, ConversationCreationAttributes> implements ConversationAttributes {
   declare id: number;
+  declare userId: number;
+  declare profileId: number;
   declare title: string;
   declare mode: 'quick_doubt' | 'exam_prep' | 'revision' | 'free_learning';
   declare subject: string | null;
@@ -42,6 +46,16 @@ Conversation.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      field: 'user_id',
+    },
+    profileId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'profile_id',
     },
     title: {
       type: DataTypes.STRING(255),

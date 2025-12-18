@@ -178,6 +178,56 @@ export async function runMigrations() {
     `);
     console.log("[Migration] Interests column type ensured as JSONB");
 
+    // Ensure conversations table exists with all required columns
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS conversations (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        profile_id INTEGER NOT NULL,
+        title VARCHAR(255),
+        mode VARCHAR(50) NOT NULL DEFAULT 'quick_doubt',
+        subject VARCHAR(100),
+        topic VARCHAR(255),
+        is_active BOOLEAN DEFAULT true NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `);
+    
+    // Add missing columns to conversations if they don't exist
+    await db.execute(sql`
+      ALTER TABLE conversations 
+      ADD COLUMN IF NOT EXISTS user_id BIGINT,
+      ADD COLUMN IF NOT EXISTS profile_id INTEGER
+    `);
+    console.log("[Migration] Conversations table ensured");
+
+    // Ensure messages table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        conversation_id INTEGER NOT NULL,
+        role VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        tokens INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `);
+    console.log("[Migration] Messages table ensured");
+
+    // Ensure sessions table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        token VARCHAR(512) NOT NULL UNIQUE,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `);
+    console.log("[Migration] Sessions table ensured");
+
     console.log("[Migration] All migrations completed successfully");
   } catch (error) {
     console.error("[Migration] Error running migrations:", error);

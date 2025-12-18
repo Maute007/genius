@@ -92,6 +92,25 @@ export function useGeniusAuth() {
     setValidated(true);
   }, []);
 
+  const refreshAuth = useCallback(async () => {
+    const token = localStorage.getItem("genius_token");
+    if (!token) return;
+
+    try {
+      const { api } = await import("@/lib/api");
+      const response = await api.auth.validate();
+      
+      if (response.valid) {
+        const updatedUser = {
+          ...response.user,
+          onboardingCompleted: response.user.onboardingCompleted,
+        };
+        localStorage.setItem("genius_user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+    } catch {}
+  }, []);
+
   const state = useMemo(() => ({
     user,
     loading,
@@ -103,6 +122,7 @@ export function useGeniusAuth() {
     ...state,
     logout,
     login,
+    refreshAuth,
   };
 }
 

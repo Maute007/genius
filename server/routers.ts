@@ -582,7 +582,7 @@ PERFIL DO ESTUDANTE:
 - Nome: ${profile.fullName}
 - Idade: ${profile.age} anos
 - Classe/Nível: ${profile.grade}
-- Interesses: ${profile.interests.join(", ")}${profile.otherInterests ? ` (outros: ${profile.otherInterests})` : ""}
+- Interesses: ${(profile.interests || []).join(", ")}${profile.otherInterests ? ` (outros: ${profile.otherInterests})` : ""}
 - Preferências de aprendizagem: ${profile.learningPreferences?.join(", ") || "Não especificado"}
 - Dificuldades: ${profile.challenges || "Não especificado"}
 - Objetivos: ${profile.studyGoals || "Não especificado"}
@@ -666,7 +666,7 @@ Exemplo: ["Insight 1...", "Insight 2...", "Insight 3..."]`,
           fallbackInsights.push(`Excelente progresso! Já tens ${conversations.length} conversas no Genius.`);
         }
 
-        if (profile.interests.length > 0) {
+        if (profile.interests && profile.interests.length > 0) {
           fallbackInsights.push(`Os teus interesses em ${profile.interests.slice(0, 2).join(" e ")} podem ser ótimos pontos de partida para novos tópicos.`);
         }
 
@@ -891,7 +891,7 @@ Exemplo: ["Insight 1...", "Insight 2...", "Insight 3..."]`,
         return {
           suggestions: [
             "Começa a estudar para gerares o teu histórico de revisão personalizado!",
-            `Com base nos teus interesses em ${profile.interests.slice(0, 2).join(" e ")}, podes começar por fazer perguntas sobre esses assuntos.`,
+            `Com base nos teus interesses em ${(profile.interests || []).slice(0, 2).join(" e ")}, podes começar por fazer perguntas sobre esses assuntos.`,
           ],
           hasData: false,
         };
@@ -925,7 +925,7 @@ Exemplo: ["Insight 1...", "Insight 2...", "Insight 3..."]`,
 
       const userContext = `
 PERFIL: ${profile.fullName}, ${profile.age} anos, ${profile.grade}
-INTERESSES: ${profile.interests.join(", ")}
+INTERESSES: ${(profile.interests || []).join(", ")}
 CONVERSAS: ${conversations.length}
 ASSUNTOS: ${Array.from(subjectsStudied).join(", ") || "Variados"}
 PROGRESSO: ${progressData.slice(0, 5).map(p => `${p.subject}: ${p.topic} (${p.masteryLevel || 0}%)`).join(", ")}
@@ -966,7 +966,7 @@ PROGRESSO: ${progressData.slice(0, 5).map(p => `${p.subject}: ${p.topic} (${p.ma
         
         const fallbackSuggestions = [
           `Revê os tópicos de ${Array.from(subjectsStudied)[0] || "Matemática"} que já estudaste.`,
-          `Pratica mais sobre ${profile.interests[0]} para conectar com os teus interesses.`,
+          `Pratica mais sobre ${(profile.interests || [])[0] || "temas de interesse"} para conectar com os teus interesses.`,
         ];
 
         return {
@@ -1109,7 +1109,7 @@ function checkModeAccess(plan: string, mode: string): boolean {
 }
 
 function buildSystemPrompt(profile: any): string {
-  const interests = profile.interests.join(", ");
+  const interests = (profile.interests || []).join(", ");
   const otherInterests = profile.otherInterests ? ` (outros: ${profile.otherInterests})` : "";
   const learningPrefs = profile.learningPreferences?.length > 0 
     ? `\n- Prefere aprender: ${profile.learningPreferences.join(", ")}` 
