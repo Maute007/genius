@@ -31,6 +31,58 @@ export async function runMigrations() {
   console.log("[Migration] Running schema migrations...");
 
   try {
+    // Ensure users table exists with all columns
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        open_id VARCHAR(64) NOT NULL UNIQUE,
+        name TEXT,
+        email VARCHAR(320),
+        password VARCHAR(255),
+        email_verified BOOLEAN DEFAULT false NOT NULL,
+        verification_token VARCHAR(255),
+        login_method VARCHAR(64),
+        role VARCHAR(20) DEFAULT 'user' NOT NULL,
+        plan VARCHAR(20) DEFAULT 'free' NOT NULL,
+        subscription_status VARCHAR(20) DEFAULT 'active' NOT NULL,
+        subscription_expires_at TIMESTAMP WITH TIME ZONE,
+        monthly_questions_used INTEGER DEFAULT 0 NOT NULL,
+        last_question_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        last_signed_in TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `);
+    console.log("[Migration] Users table ensured");
+
+    // Ensure profiles table exists with all columns
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS profiles (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL UNIQUE,
+        full_name VARCHAR(255),
+        email VARCHAR(320),
+        whatsapp VARCHAR(20),
+        age INTEGER,
+        grade VARCHAR(50),
+        interests JSONB,
+        other_interests TEXT,
+        learning_style TEXT,
+        learning_preferences JSONB,
+        challenges TEXT,
+        study_goals TEXT,
+        school_name VARCHAR(255),
+        school_type VARCHAR(50),
+        province VARCHAR(100),
+        city VARCHAR(100),
+        onboarding_completed BOOLEAN DEFAULT false NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `);
+    console.log("[Migration] Profiles table ensured");
+
+    // Add any missing columns to profiles
     await db.execute(sql`
       ALTER TABLE profiles 
       ADD COLUMN IF NOT EXISTS full_name VARCHAR(255),
@@ -44,8 +96,9 @@ export async function runMigrations() {
       ADD COLUMN IF NOT EXISTS school_type VARCHAR(50),
       ADD COLUMN IF NOT EXISTS city VARCHAR(100)
     `);
-    console.log("[Migration] Profiles table updated");
+    console.log("[Migration] Profiles columns updated");
 
+    // Migrate interests to JSONB if needed
     await db.execute(sql`
       DO $$ 
       BEGIN 
@@ -65,7 +118,7 @@ export async function runMigrations() {
         END IF;
       END $$
     `);
-    console.log("[Migration] Interests column migrated to JSONB");
+    console.log("[Migration] Interests column type ensured as JSONB");
 
     console.log("[Migration] All migrations completed successfully");
   } catch (error) {

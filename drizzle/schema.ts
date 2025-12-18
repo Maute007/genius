@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, timestamp, varchar, boolean, json, jsonb, serial } from "drizzle-orm/pg-core";
+import { integer, bigint, pgEnum, pgTable, text, timestamp, varchar, boolean, json, jsonb, serial } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["user", "admin", "super_admin"]);
 export const planEnum = pgEnum("plan", ["free", "student", "student_plus", "family"]);
@@ -35,7 +35,7 @@ export const users = pgTable("users", {
 
 export const profiles = pgTable("profiles", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
   
   fullName: varchar("full_name", { length: 255 }),
   email: varchar("email", { length: 320 }),
