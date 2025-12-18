@@ -28,6 +28,17 @@ const INTEREST_OPTIONS = [
   "Desporto", "Culinária", "Dança", "Cinema", "Natureza", "Matemática",
 ];
 
+const SCHOOL_TYPES = [
+  { value: "self_learner", label: "Estudo sozinho(a)" },
+  { value: "public_school", label: "Escola Pública" },
+  { value: "private_school", label: "Escola Privada" },
+  { value: "public_university", label: "Universidade Pública" },
+  { value: "private_university", label: "Universidade Privada" },
+  { value: "technical_institute", label: "Instituto Técnico" },
+  { value: "non_student", label: "Não sou estudante" },
+  { value: "other", label: "Outro" },
+] as const;
+
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
@@ -57,6 +68,9 @@ export default function Onboarding() {
   const [grade, setGrade] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [province, setProvince] = useState("");
+  const [city, setCity] = useState("");
+  const [schoolType, setSchoolType] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   const setStep = (newStep: number) => {
@@ -84,6 +98,16 @@ export default function Onboarding() {
         return false;
       }
     }
+    if (step === 3) {
+      if (!province || !city || !schoolType) {
+        toast.error("Por favor, preenche a tua localização e tipo de estudante");
+        return false;
+      }
+      if (schoolType !== "self_learner" && schoolType !== "non_student" && !schoolName) {
+        toast.error("Por favor, indica o nome da tua escola");
+        return false;
+      }
+    }
     return true;
   };
 
@@ -103,17 +127,25 @@ export default function Onboarding() {
       return;
     }
 
+    if (!validateStep()) {
+      return;
+    }
+
     setIsPending(true);
     try {
+      const finalSchoolName = schoolType === "self_learner" || schoolType === "non_student" 
+        ? "N/A" 
+        : schoolName;
+      
       const profileData = {
         fullName: fullName,
         age: parseInt(age, 10),
         grade: grade,
         interests: selectedInterests.length > 0 ? selectedInterests : ["Estudos"],
-        province: province || "Maputo Cidade",
-        city: "A definir",
-        schoolName: "A definir",
-        schoolType: "self_learner" as const,
+        province: province,
+        city: city,
+        schoolName: finalSchoolName,
+        schoolType: schoolType as "self_learner" | "non_student" | "public_school" | "private_school" | "public_university" | "private_university" | "technical_institute" | "other",
       };
       
       await api.profile.update(profileData);
@@ -193,16 +225,17 @@ export default function Onboarding() {
               >
                 {step === 1 && "Vamos conhecer-te melhor"}
                 {step === 2 && "Quais são os teus interesses?"}
-                {step === 3 && "Estamos quase lá!"}
+                {step === 3 && "Onde estudas?"}
+                {step === 4 && "Estamos quase lá!"}
               </motion.h1>
             </AnimatePresence>
             
             <div className="flex justify-center gap-2 mt-4">
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3, 4].map((s) => (
                 <motion.div
                   key={s}
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    s <= step ? "bg-primary w-12 sm:w-16" : "bg-gray-200 w-8 sm:w-10"
+                    s <= step ? "bg-primary w-10 sm:w-12" : "bg-gray-200 w-6 sm:w-8"
                   }`}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -324,12 +357,8 @@ export default function Onboarding() {
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="space-y-4"
                 >
-                  <motion.div 
-                    variants={fadeInUp} 
-                    initial="hidden" 
-                    animate="visible"
-                  >
-                    <Label htmlFor="province" className="text-sm font-medium">Província (opcional)</Label>
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.1 }}>
+                    <Label htmlFor="province" className="text-sm font-medium">Província *</Label>
                     <Select value={province} onValueChange={setProvince}>
                       <SelectTrigger className="mt-1.5 h-11 sm:h-12">
                         <SelectValue placeholder="Seleciona a tua província" />
@@ -342,6 +371,62 @@ export default function Onboarding() {
                     </Select>
                   </motion.div>
                   
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.2 }}>
+                    <Label htmlFor="city" className="text-sm font-medium">Cidade *</Label>
+                    <Input
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ex: Maputo, Beira, Nampula"
+                      className="mt-1.5 h-11 sm:h-12"
+                    />
+                  </motion.div>
+
+                  <motion.div variants={fadeInUp} initial="hidden" animate="visible" transition={{ delay: 0.3 }}>
+                    <Label htmlFor="schoolType" className="text-sm font-medium">Como estudas? *</Label>
+                    <Select value={schoolType} onValueChange={setSchoolType}>
+                      <SelectTrigger className="mt-1.5 h-11 sm:h-12">
+                        <SelectValue placeholder="Seleciona a tua situação" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SCHOOL_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+
+                  {schoolType && schoolType !== "self_learner" && schoolType !== "non_student" && (
+                    <motion.div 
+                      variants={fadeInUp} 
+                      initial="hidden" 
+                      animate="visible" 
+                      transition={{ delay: 0.4 }}
+                    >
+                      <Label htmlFor="schoolName" className="text-sm font-medium">Nome da Escola/Universidade *</Label>
+                      <Input
+                        id="schoolName"
+                        value={schoolName}
+                        onChange={(e) => setSchoolName(e.target.value)}
+                        placeholder="Ex: Escola Secundária de Josina Machel"
+                        className="mt-1.5 h-11 sm:h-12"
+                      />
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+
+              {step === 4 && (
+                <motion.div
+                  key="step4"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-4"
+                >
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -357,6 +442,22 @@ export default function Onboarding() {
                     <p className="text-green-800 text-sm">
                       Tudo pronto! Clica em "Começar" para iniciar a tua jornada.
                     </p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-gray-50 p-4 rounded-xl border border-gray-200"
+                  >
+                    <p className="text-gray-700 text-sm font-medium mb-2">Resumo do teu perfil:</p>
+                    <ul className="text-gray-600 text-sm space-y-1">
+                      <li><strong>Nome:</strong> {fullName}</li>
+                      <li><strong>Idade:</strong> {age} anos</li>
+                      <li><strong>Classe:</strong> {grade}</li>
+                      <li><strong>Localização:</strong> {city}, {province}</li>
+                      <li><strong>Interesses:</strong> {selectedInterests.join(", ") || "Estudos"}</li>
+                    </ul>
                   </motion.div>
                 </motion.div>
               )}
@@ -380,7 +481,7 @@ export default function Onboarding() {
               <div />
             )}
             
-            {step < 3 ? (
+            {step < 4 ? (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button onClick={handleNext} className="h-11 sm:h-12 shadow-lg shadow-primary/25">
                   Continuar
