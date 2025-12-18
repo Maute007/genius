@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Brain, Send, Loader2, Menu, LogOut, User, Zap, BookOpen, RotateCcw, Sparkles, Plus, MessageSquare, X, Trash2 } from "lucide-react";
+import { Brain, Send, Loader2, Menu, LogOut, User, Zap, BookOpen, RotateCcw, Sparkles, Plus, MessageSquare, X, Trash2, Copy, Check, Home } from "lucide-react";
 import { api, Conversation, Message } from "@/lib/api";
 import { toast } from "sonner";
 import { APP_LOGO } from "@/const";
@@ -31,6 +31,102 @@ const MODE_COLORS: Record<string, { bg: string; text: string; border: string; gr
   revision: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", gradient: "from-emerald-500 to-teal-500" },
   free_learning: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", gradient: "from-purple-500 to-pink-500" },
 };
+
+function MessageBubble({ msg, index }: { msg: Message; index: number }) {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(msg.content);
+    setCopied(true);
+    toast.success("Copiado!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
+  return (
+    <motion.div
+      key={msg.id || index}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className={`group flex gap-2 sm:gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+    >
+      {msg.role === "assistant" && (
+        <motion.div 
+          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        >
+          <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        </motion.div>
+      )}
+      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%]">
+        <div
+          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 ${
+            msg.role === "user"
+              ? "bg-primary text-white shadow-lg shadow-primary/20"
+              : "bg-white border border-gray-200 text-gray-900 shadow-sm"
+          }`}
+        >
+          {msg.role === "assistant" ? (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm sm:text-base">{children}</p>,
+                strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                ul: ({ children }) => <ul className="mb-3 ml-5 list-disc space-y-1.5 text-sm sm:text-base">{children}</ul>,
+                ol: ({ children }) => <ol className="mb-3 ml-5 list-decimal space-y-1.5 text-sm sm:text-base">{children}</ol>,
+                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                code: ({ children }) => (
+                  <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800">
+                    {children}
+                  </code>
+                ),
+                pre: ({ children }) => (
+                  <pre className="mb-3 overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs sm:text-sm text-gray-100">
+                    {children}
+                  </pre>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-primary pl-3 italic text-gray-700 my-3 text-sm">
+                    {children}
+                  </blockquote>
+                ),
+                h1: ({ children }) => <h1 className="text-xl font-bold mb-3 text-gray-900">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-lg font-bold mb-2 text-gray-900">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-base font-bold mb-2 text-gray-900">{children}</h3>,
+              }}
+            >
+              {msg.content}
+            </ReactMarkdown>
+          ) : (
+            <p className="leading-relaxed text-sm sm:text-base">{msg.content}</p>
+          )}
+        </div>
+        <div className={`flex items-center gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <button
+            onClick={handleCopy}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+            title="Copiar"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      </div>
+      {msg.role === "user" && (
+        <motion.div 
+          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        >
+          <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
 
 function ConversationItem({
   conversation,
@@ -609,79 +705,9 @@ export default function Chat() {
               </div>
             </motion.div>
           ) : (
-            <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
+            <div className="mx-auto max-w-3xl space-y-3 sm:space-y-5">
               {messages.map((msg, i) => (
-                <motion.div
-                  key={msg.id || i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex gap-2 sm:gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {msg.role === "assistant" && (
-                    <motion.div 
-                      className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    </motion.div>
-                  )}
-                  <div
-                    className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 sm:px-6 sm:py-4 ${
-                      msg.role === "user"
-                        ? "bg-primary text-white shadow-lg shadow-primary/20"
-                        : "bg-white border border-gray-200 text-gray-900 shadow-sm"
-                    }`}
-                  >
-                    {msg.role === "assistant" ? (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
-                          strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
-                          em: ({ children }) => <em className="italic">{children}</em>,
-                          ul: ({ children }) => <ul className="mb-4 ml-6 list-disc space-y-2">{children}</ul>,
-                          ol: ({ children }) => <ol className="mb-4 ml-6 list-decimal space-y-2">{children}</ol>,
-                          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-                          code: ({ children }) => (
-                            <code className="rounded bg-gray-100 px-2 py-1 text-sm font-mono text-gray-800">
-                              {children}
-                            </code>
-                          ),
-                          pre: ({ children }) => (
-                            <pre className="mb-4 overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-100">
-                              {children}
-                            </pre>
-                          ),
-                          blockquote: ({ children }) => (
-                            <blockquote className="border-l-4 border-primary pl-4 italic text-gray-700 my-4">
-                              {children}
-                            </blockquote>
-                          ),
-                          h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-xl font-bold mb-3 text-gray-900">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-lg font-bold mb-2 text-gray-900">{children}</h3>,
-                        }}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
-                    ) : (
-                      <p className="leading-relaxed">{msg.content}</p>
-                    )}
-                  </div>
-                  {msg.role === "user" && (
-                    <motion.div 
-                      className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </motion.div>
-                  )}
-                </motion.div>
+                <MessageBubble key={msg.id || i} msg={msg} index={i} />
               ))}
               <AnimatePresence>
                 {sending && (
@@ -784,12 +810,21 @@ export default function Chat() {
         )}
       </div>
       
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 px-4 py-2 safe-area-bottom z-20">
-        <div className="flex items-center justify-around max-w-md mx-auto">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 safe-area-bottom z-20">
+        <div className="flex items-center justify-around max-w-md mx-auto py-1">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setLocation("/")}
+            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Início</span>
+          </motion.button>
+          
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center gap-0.5 p-2 text-gray-500 hover:text-primary transition-colors"
+            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
           >
             <MessageSquare className="h-5 w-5" />
             <span className="text-[10px] font-medium">Conversas</span>
@@ -799,25 +834,33 @@ export default function Chat() {
             whileTap={{ scale: 0.9 }}
             onClick={handleNewConversation}
             disabled={creating}
-            className="flex flex-col items-center gap-0.5 p-2 text-primary"
+            className="flex flex-col items-center gap-0.5 py-2 px-4"
           >
-            <div className="w-10 h-10 -mt-4 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+            <div className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30 border-4 border-white">
               {creating ? (
                 <Loader2 className="h-5 w-5 text-white animate-spin" />
               ) : (
                 <Plus className="h-5 w-5 text-white" />
               )}
             </div>
-            <span className="text-[10px] font-medium">Novo</span>
           </motion.button>
           
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => setLocation("/dashboard")}
-            className="flex flex-col items-center gap-0.5 p-2 text-gray-500 hover:text-primary transition-colors"
+            onClick={() => {
+              const modes = ["quick_doubt", "exam_prep", "revision", "free_learning"];
+              const currentIndex = modes.indexOf(mode);
+              const nextIndex = (currentIndex + 1) % modes.length;
+              setMode(modes[nextIndex]);
+              toast.success(`Modo: ${MODES.find(m => m.value === modes[nextIndex])?.label}`);
+            }}
+            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
           >
-            <User className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Perfil</span>
+            {(() => {
+              const ModeIcon = MODES.find(m => m.value === mode)?.icon || Zap;
+              return <ModeIcon className="h-5 w-5" />;
+            })()}
+            <span className="text-[10px] font-medium">Modo</span>
           </motion.button>
         </div>
       </div>
