@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { APP_LOGO } from "@/const";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import SplashScreen from "@/components/SplashScreen";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -68,11 +69,26 @@ function CountUp({ end, duration = 2000, suffix = "" }: { end: number; duration?
   );
 }
 
+const SPLASH_KEY = "genius_splash_shown";
+
 export default function Home() {
   const { isAuthenticated, loading } = useGeniusAuth();
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem(SPLASH_KEY);
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem(SPLASH_KEY, "true");
+    setShowSplash(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,7 +130,12 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <>
+      <AnimatePresence>
+        {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      </AnimatePresence>
+      
+      <div className="min-h-screen overflow-x-hidden">
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -667,5 +688,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

@@ -459,29 +459,34 @@ export default function Chat() {
       </div>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex h-20 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
-          <div className="flex items-center gap-4">
+        <header className="flex h-14 lg:h-20 items-center justify-between border-b border-gray-200 bg-white px-3 lg:px-6 safe-area-top">
+          <div className="flex items-center gap-2 lg:gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
+              className="lg:hidden h-9 w-9"
               aria-label="Menu"
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <ModeIcon className="h-5 w-5 text-primary" />
+            <motion.div 
+              className="flex items-center gap-2 lg:gap-3"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className={`flex h-8 w-8 lg:h-10 lg:w-10 items-center justify-center rounded-xl bg-gradient-to-br ${MODE_COLORS[mode]?.gradient || 'from-primary to-teal-400'} shadow-lg`}>
+                <ModeIcon className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">{currentMode?.label}</h1>
-                <p className="text-sm text-gray-500">{currentMode?.description}</p>
+              <div className="hidden sm:block">
+                <h1 className="text-base lg:text-lg font-semibold text-gray-900">{currentMode?.label}</h1>
+                <p className="text-xs lg:text-sm text-gray-500">{currentMode?.description}</p>
               </div>
-            </div>
+              <span className="sm:hidden text-sm font-semibold text-gray-900">{currentMode?.label}</span>
+            </motion.div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 lg:gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -491,7 +496,7 @@ export default function Chat() {
               Dashboard
             </Button>
             <Select value={mode} onValueChange={handleModeChange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] lg:w-[180px] h-9 text-xs lg:text-sm">
                 <SelectValue placeholder="Modo" />
               </SelectTrigger>
               <SelectContent>
@@ -511,39 +516,97 @@ export default function Chat() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <div className="flex-1 overflow-y-auto p-3 lg:p-6 pb-20 lg:pb-6">
           {!conversationId ? (
-            <div className="flex h-full flex-col items-center justify-center text-center px-4">
-              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-                <MessageSquare className="h-12 w-12 text-primary" />
-              </div>
-              <h2 className="mb-2 text-2xl font-bold text-gray-900">
-                Nenhuma conversa ativa
-              </h2>
-              <p className="max-w-md text-gray-600 mb-6">
-                Clique em <strong>"Nova Conversa"</strong> na barra lateral para começar, ou escolha uma conversa do histórico.
-              </p>
-              <Button
-                onClick={handleNewConversation}
-                className="bg-primary hover:bg-primary/90"
-                disabled={creating}
+            <motion.div 
+              className="flex h-full flex-col items-center justify-center text-center px-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div 
+                className="mb-6 flex h-20 w-20 lg:h-24 lg:w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30"
+                animate={{ 
+                  boxShadow: ["0 10px 40px rgba(20, 184, 166, 0.3)", "0 15px 50px rgba(20, 184, 166, 0.5)", "0 10px 40px rgba(20, 184, 166, 0.3)"]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Criar Nova Conversa
-              </Button>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-                <ModeIcon className="h-12 w-12 text-primary" />
-              </div>
-              <h2 className="mb-2 text-2xl font-bold text-gray-900">
-                Olá! Como posso ajudar-te hoje?
+                <MessageSquare className="h-10 w-10 lg:h-12 lg:w-12 text-white" />
+              </motion.div>
+              <h2 className="mb-2 text-xl lg:text-2xl font-bold text-gray-900 font-['Playfair_Display']">
+                Pronto para aprender?
               </h2>
-              <p className="max-w-md text-gray-600">
-                Faz uma pergunta ou partilha uma dúvida. Vou guiar-te passo a passo até dominares o conceito.
+              <p className="max-w-md text-sm lg:text-base text-gray-600 mb-6">
+                Toca no <strong className="text-primary">+</strong> para iniciar uma nova conversa com o teu tutor
               </p>
-            </div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={handleNewConversation}
+                  className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 px-6"
+                  disabled={creating}
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Nova Conversa
+                </Button>
+              </motion.div>
+              
+              <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-sm">
+                {MODES.map((m) => {
+                  const Icon = m.icon;
+                  const colors = MODE_COLORS[m.value];
+                  return (
+                    <motion.button
+                      key={m.value}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => { setMode(m.value); handleNewConversation(); }}
+                      className={`p-3 rounded-xl border ${colors.border} ${colors.bg} text-left transition-all`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${colors.gradient} flex items-center justify-center mb-2`}>
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <p className={`text-xs font-semibold ${colors.text}`}>{m.label}</p>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ) : messages.length === 0 ? (
+            <motion.div 
+              className="flex h-full flex-col items-center justify-center text-center px-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <motion.div 
+                className={`mb-6 flex h-20 w-20 lg:h-24 lg:w-24 items-center justify-center rounded-3xl bg-gradient-to-br ${MODE_COLORS[mode]?.gradient || 'from-primary to-teal-400'} shadow-xl`}
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                <ModeIcon className="h-10 w-10 lg:h-12 lg:w-12 text-white" />
+              </motion.div>
+              <h2 className="mb-2 text-xl lg:text-2xl font-bold text-gray-900 font-['Playfair_Display']">
+                Olá! Como posso ajudar?
+              </h2>
+              <p className="max-w-md text-sm lg:text-base text-gray-600">
+                Escreve a tua dúvida em baixo. Vou guiar-te passo a passo!
+              </p>
+              
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {["Explica-me...", "Como resolver...", "O que é..."].map((hint, i) => (
+                  <motion.button
+                    key={hint}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    onClick={() => setMessage(hint)}
+                    className="px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {hint}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
           ) : (
             <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
               {messages.map((msg, i) => (
@@ -667,14 +730,14 @@ export default function Chat() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="border-t border-gray-200 bg-white p-3 sm:p-4 safe-area-bottom"
+              className="border-t border-gray-200 bg-white/95 backdrop-blur-lg p-3 sm:p-4"
             >
-              <div className="mx-auto flex max-w-3xl gap-2 sm:gap-4">
+              <div className="mx-auto flex max-w-3xl gap-2 sm:gap-3">
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Escreve a tua pergunta..."
-                  className="flex-1 h-11 sm:h-12 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -687,7 +750,7 @@ export default function Chat() {
                   <Button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || sending}
-                    className="bg-primary hover:bg-primary/90 h-11 w-11 sm:h-12 sm:w-12 p-0 shadow-lg shadow-primary/25"
+                    className="bg-gradient-to-r from-primary to-teal-400 hover:from-primary/90 hover:to-teal-400/90 h-11 w-11 sm:h-12 sm:w-12 p-0 shadow-lg shadow-primary/30 rounded-xl"
                   >
                     {sending ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -700,6 +763,62 @@ export default function Chat() {
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {!conversationId && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleNewConversation}
+            disabled={creating}
+            className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 text-white shadow-xl shadow-primary/40 flex items-center justify-center z-30"
+          >
+            {creating ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <Plus className="h-6 w-6" />
+            )}
+          </motion.button>
+        )}
+      </div>
+      
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 px-4 py-2 safe-area-bottom z-20">
+        <div className="flex items-center justify-around max-w-md mx-auto">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 p-2 text-gray-500 hover:text-primary transition-colors"
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Conversas</span>
+          </motion.button>
+          
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleNewConversation}
+            disabled={creating}
+            className="flex flex-col items-center gap-0.5 p-2 text-primary"
+          >
+            <div className="w-10 h-10 -mt-4 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+              {creating ? (
+                <Loader2 className="h-5 w-5 text-white animate-spin" />
+              ) : (
+                <Plus className="h-5 w-5 text-white" />
+              )}
+            </div>
+            <span className="text-[10px] font-medium">Novo</span>
+          </motion.button>
+          
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setLocation("/dashboard")}
+            className="flex flex-col items-center gap-0.5 p-2 text-gray-500 hover:text-primary transition-colors"
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Perfil</span>
+          </motion.button>
+        </div>
       </div>
     </div>
   );
