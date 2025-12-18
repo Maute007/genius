@@ -122,6 +122,7 @@ export const messages = pgTable("messages", {
   tokens: integer("tokens"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const learningProgress = pgTable("learning_progress", {

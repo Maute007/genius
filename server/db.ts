@@ -472,6 +472,7 @@ export async function addMessage(data: {
     content: data.content,
     tokens: data.tokens,
     createdAt: now,
+    updatedAt: now,
   });
 
   await db
