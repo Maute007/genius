@@ -60,48 +60,57 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
           <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
         </motion.div>
       )}
-      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%]">
+      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] min-w-0">
         <div
-          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 ${
+          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 overflow-hidden ${
             msg.role === "user"
               ? "bg-primary text-white shadow-lg shadow-primary/20"
               : "bg-white border border-gray-200 text-gray-900 shadow-sm"
           }`}
         >
           {msg.role === "assistant" ? (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm sm:text-base">{children}</p>,
-                strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
-                em: ({ children }) => <em className="italic">{children}</em>,
-                ul: ({ children }) => <ul className="mb-3 ml-5 list-disc space-y-1.5 text-sm sm:text-base">{children}</ul>,
-                ol: ({ children }) => <ol className="mb-3 ml-5 list-decimal space-y-1.5 text-sm sm:text-base">{children}</ol>,
-                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-                code: ({ children }) => (
-                  <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800">
-                    {children}
-                  </code>
-                ),
-                pre: ({ children }) => (
-                  <pre className="mb-3 overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs sm:text-sm text-gray-100">
-                    {children}
-                  </pre>
-                ),
-                blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-primary pl-3 italic text-gray-700 my-3 text-sm">
-                    {children}
-                  </blockquote>
-                ),
-                h1: ({ children }) => <h1 className="text-xl font-bold mb-3 text-gray-900">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-lg font-bold mb-2 text-gray-900">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-base font-bold mb-2 text-gray-900">{children}</h3>,
-              }}
-            >
-              {msg.content}
-            </ReactMarkdown>
+            <div className="chat-markdown min-w-0 w-full">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm sm:text-base break-words">{children}</p>,
+                  strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  ul: ({ children }) => <ul className="mb-3 ml-5 list-disc space-y-1.5 text-sm sm:text-base">{children}</ul>,
+                  ol: ({ children }) => <ol className="mb-3 ml-5 list-decimal space-y-1.5 text-sm sm:text-base">{children}</ol>,
+                  li: ({ children }) => <li className="leading-relaxed break-words">{children}</li>,
+                  code: ({ className, children }) => {
+                    const isInline = !className;
+                    return isInline ? (
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800 break-words">
+                        {children}
+                      </code>
+                    ) : (
+                      <code className="block font-mono text-xs sm:text-sm whitespace-pre min-w-max">
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ children }) => (
+                    <pre className="mb-3 rounded-lg bg-gray-900 p-3 text-gray-100 overflow-x-auto max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+                      {children}
+                    </pre>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-primary pl-3 italic text-gray-700 my-3 text-sm">
+                      {children}
+                    </blockquote>
+                  ),
+                  h1: ({ children }) => <h1 className="text-xl font-bold mb-3 text-gray-900">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-lg font-bold mb-2 text-gray-900">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-base font-bold mb-2 text-gray-900">{children}</h3>,
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
+            </div>
           ) : (
-            <p className="leading-relaxed text-sm sm:text-base">{msg.content}</p>
+            <p className="leading-relaxed text-sm sm:text-base break-words">{msg.content}</p>
           )}
         </div>
         <div className={`flex items-center gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>

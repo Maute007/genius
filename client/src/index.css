@@ -279,3 +279,54 @@ html, body {
   }
 }
 
+/* Chat markdown code block styling */
+.chat-markdown {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.chat-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.chat-markdown pre code {
+  display: inline-block;
+  min-width: max-content;
+}
+
+.chat-markdown code:not(pre code) {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol,
+.chat-markdown blockquote {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Show scrollbar on code blocks for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .chat-markdown pre {
+    scrollbar-width: auto;
+  }
+  
+  .chat-markdown pre::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+  
+  .chat-markdown pre::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+}
+
