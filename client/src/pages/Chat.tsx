@@ -139,8 +139,6 @@ function ConversationItem({
   onSelect: () => void;
   onDelete: () => void;
 }) {
-  const [showDelete, setShowDelete] = useState(false);
-  
   const mode = MODES.find(m => m.value === conversation.mode);
   const ModeIcon = mode?.icon || MessageSquare;
   const modeColors = MODE_COLORS[conversation.mode] || MODE_COLORS.quick_doubt;
@@ -183,8 +181,6 @@ function ConversationItem({
           : "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-md"
       }`}
       onClick={onSelect}
-      onMouseEnter={() => setShowDelete(true)}
-      onMouseLeave={() => setShowDelete(false)}
     >
       {isActive && (
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/60" />
@@ -219,23 +215,17 @@ function ConversationItem({
         </div>
       </div>
 
-      <AnimatePresence>
-        {showDelete && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-all shadow-sm"
-            title="Apagar conversa"
-          >
-            <Trash2 className="h-3.5 w-3.5 text-red-500" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        className="absolute top-2 right-2 p-1.5 rounded-lg bg-gray-100 hover:bg-red-100 border border-gray-200 hover:border-red-200 transition-all"
+        title="Apagar conversa"
+      >
+        <Trash2 className="h-3.5 w-3.5 text-gray-400 hover:text-red-500" />
+      </motion.button>
     </motion.div>
   );
 }

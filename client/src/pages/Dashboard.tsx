@@ -291,10 +291,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card/30 overflow-x-hidden">
       <AuthHeader />
       
-      <div className="pt-20 container py-8">
+      <div className="pt-20 px-4 sm:container py-6 sm:py-8 max-w-full overflow-x-hidden">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3">
@@ -438,15 +438,15 @@ export default function Dashboard() {
                       return (
                         <div
                           key={conversation.id}
-                          className="group p-3 border rounded-xl hover:bg-accent cursor-pointer transition-all hover:shadow-sm flex items-center gap-3"
+                          className="group p-3 border rounded-xl hover:bg-accent cursor-pointer transition-all hover:shadow-sm flex items-center gap-2"
                           onClick={() => setLocation("/chat")}
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${modeColors[conversation.modeKey] || "bg-gray-100 text-gray-700"}`}>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${modeColors[conversation.modeKey] || "bg-gray-100 text-gray-700"}`}>
                                 {conversation.mode}
                               </span>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[10px] text-muted-foreground shrink-0">
                                 {conversation.date}
                               </span>
                             </div>
@@ -456,7 +456,7 @@ export default function Dashboard() {
                           </div>
                           <button
                             onClick={(e) => handleDeleteConversation(conversation.id, e)}
-                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all"
+                            className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all shrink-0"
                             title="Remover"
                           >
                             {deletingId === conversation.id ? (
