@@ -295,22 +295,24 @@ export default function Dashboard() {
       <AuthHeader />
       
       <div className="pt-20 px-4 sm:container py-6 sm:py-8 max-w-full overflow-x-hidden">
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 truncate">
               Olá, {profile?.fullName || user?.name || "Estudante"}!
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Bem-vindo de volta ao Genius. Pronto para dominar mais conhecimento hoje?
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+              Pronto para dominar mais conhecimento hoje?
             </p>
           </div>
           <Button 
             variant="outline" 
-            className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
+            size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50 shrink-0 self-start"
             onClick={handleLogout}
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Terminar Sessão
+            <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Terminar Sessão</span>
+            <span className="sm:hidden">Sair</span>
           </Button>
         </div>
 
@@ -326,21 +328,21 @@ export default function Dashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inicio" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
+          <TabsContent value="inicio" className="space-y-4 sm:space-y-6">
+            <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {quickActions.map((action, index) => (
                 <Card
                   key={index}
-                  className="p-6 transition-all cursor-pointer hover:shadow-lg hover:scale-105"
+                  className="p-4 sm:p-6 transition-all cursor-pointer hover:shadow-lg active:scale-[0.98] sm:hover:scale-105"
                   onClick={action.action}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg ${action.color}`}>
-                      <action.icon className="h-6 w-6" />
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className={`p-2.5 sm:p-3 rounded-lg shrink-0 ${action.color}`}>
+                      <action.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-1">{action.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold mb-0.5 sm:mb-1 text-sm sm:text-base">{action.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {action.description}
                       </p>
                     </div>
@@ -349,9 +351,9 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-6">Estatísticas</h2>
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+              <Card className="p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Estatísticas</h2>
                 <div className="space-y-4">
                   {stats.map((stat, index) => (
                     <div key={index} className="flex items-center justify-between">
@@ -399,22 +401,22 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="h-5 w-5 text-teal-600" />
-                    <h2 className="text-xl font-bold">Histórico de Conversas</h2>
+              <Card className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 shrink-0" />
+                    <h2 className="text-base sm:text-xl font-bold truncate">Histórico</h2>
                   </div>
                   <Button 
                     size="sm"
                     onClick={() => setLocation("/chat")}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 shrink-0 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                     Nova
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                   Últimas {displayCount} conversas
                 </p>
                 {recentConversations.length === 0 ? (
