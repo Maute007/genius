@@ -749,12 +749,16 @@ export default function Chat() {
               exit={{ opacity: 0, y: 20 }}
               className="border-t border-gray-200 bg-white/95 backdrop-blur-lg p-3 sm:p-4"
             >
-              <div className="mx-auto flex max-w-3xl gap-2 sm:gap-3">
-                <Input
+              <div className="mx-auto flex max-w-3xl gap-2 sm:gap-3 items-end">
+                <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  }}
                   placeholder="Escreve a tua pergunta..."
-                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 min-h-[44px] max-h-[120px] py-2.5 px-3 sm:px-4 text-sm sm:text-base rounded-xl border border-gray-200 bg-gray-50 focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:outline-none resize-none overflow-y-auto"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -762,6 +766,7 @@ export default function Chat() {
                     }
                   }}
                   disabled={sending}
+                  rows={1}
                 />
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
