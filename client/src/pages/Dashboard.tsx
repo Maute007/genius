@@ -21,7 +21,10 @@ import {
   Loader2,
   Save,
   LogOut,
-  Settings
+  Settings,
+  Trash2,
+  ChevronDown,
+  Plus
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,6 +65,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("inicio");
+  const [showMore, setShowMore] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
@@ -118,6 +123,23 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Logout failed:", error);
       toast.error("Erro ao terminar sessão");
+    }
+  };
+
+  const handleDeleteConversation = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deletingId) return;
+    
+    setDeletingId(id);
+    try {
+      await api.conversations.delete(id);
+      setConversations(prev => prev.filter(c => c.id !== id));
+      toast.success("Conversa removida");
+    } catch (error) {
+      console.error("Failed to delete:", error);
+      toast.error("Erro ao remover conversa");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -239,7 +261,8 @@ export default function Dashboard() {
     return maxMode ? modeLabels[maxMode[0]] || maxMode[0] : "N/A";
   }
 
-  const recentConversations = conversations.slice(0, 5).map((conv) => {
+  const displayCount = showMore ? 20 : 10;
+  const recentConversations = conversations.slice(0, displayCount).map((conv) => {
     const modeLabels: Record<string, string> = {
       quick_doubt: "Dúvida Rápida",
       exam_prep: "Preparação para Exame",
@@ -251,8 +274,10 @@ export default function Dashboard() {
       id: conv.id,
       title: conv.title || "Conversa sem título",
       mode: modeLabels[conv.mode] || conv.mode,
+      modeKey: conv.mode,
       subject: conv.subject || null,
       topic: conv.topic || null,
+      firstMessagePreview: (conv as any).firstMessagePreview || null,
       date: new Date(conv.createdAt).toLocaleDateString("pt-MZ"),
     };
   });
@@ -375,61 +400,83 @@ export default function Dashboard() {
               </Card>
 
               <Card className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <MessageCircle className="h-5 w-5 text-teal-600" />
-                  <h2 className="text-xl font-bold">Histórico de Conversas</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="h-5 w-5 text-teal-600" />
+                    <h2 className="text-xl font-bold">Histórico de Conversas</h2>
+                  </div>
+                  <Button 
+                    size="sm"
+                    onClick={() => setLocation("/chat")}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nova
+                  </Button>
                 </div>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Continua de onde paraste ou revê o que já estudaste
+                <p className="text-sm text-muted-foreground mb-4">
+                  Últimas {displayCount} conversas
                 </p>
                 {recentConversations.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
                     <p className="mb-4">Ainda não tens conversas.</p>
                     <Button onClick={() => setLocation("/chat")}>
                       Começar agora
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {recentConversations.map((conversation) => (
-                      <div
-                        key={conversation.id}
-                        className="p-4 border rounded-lg hover:bg-accent cursor-pointer transition-all hover:shadow-md"
-                        onClick={() => setLocation("/chat")}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-base mb-1">
-                              {conversation.title}
-                            </h4>
-                            {(conversation.subject || conversation.topic) && (
-                              <p className="text-xs text-teal-600 mb-1">
-                                {conversation.subject && `${conversation.subject}`}
-                                {conversation.topic && ` - ${conversation.topic}`}
-                              </p>
+                  <div className="space-y-2">
+                    {recentConversations.map((conversation) => {
+                      const modeColors: Record<string, string> = {
+                        quick_doubt: "bg-amber-100 text-amber-700",
+                        exam_prep: "bg-blue-100 text-blue-700",
+                        revision: "bg-emerald-100 text-emerald-700",
+                        free_learning: "bg-purple-100 text-purple-700",
+                      };
+                      
+                      return (
+                        <div
+                          key={conversation.id}
+                          className="group p-3 border rounded-xl hover:bg-accent cursor-pointer transition-all hover:shadow-sm flex items-center gap-3"
+                          onClick={() => setLocation("/chat")}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${modeColors[conversation.modeKey] || "bg-gray-100 text-gray-700"}`}>
+                                {conversation.mode}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {conversation.date}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium truncate">
+                              {conversation.firstMessagePreview || conversation.title}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all"
+                            title="Remover"
+                          >
+                            {deletingId === conversation.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
                             )}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {conversation.date}
-                          </div>
+                          </button>
                         </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs px-2 py-1 bg-muted rounded-full">
-                            {conversation.mode}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     
-                    {recentConversations.length >= 5 && (
+                    {conversations.length > 10 && !showMore && (
                       <Button 
-                        variant="outline" 
-                        className="w-full mt-2"
-                        onClick={() => setLocation("/chat")}
+                        variant="ghost" 
+                        className="w-full mt-2 text-muted-foreground"
+                        onClick={() => setShowMore(true)}
                       >
-                        Ver todas as conversas
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        Ver mais ({Math.min(conversations.length, 20) - 10} restantes)
                       </Button>
                     )}
                   </div>

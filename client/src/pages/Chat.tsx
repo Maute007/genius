@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Brain, Send, Loader2, Menu, LogOut, User, Zap, BookOpen, RotateCcw, Sparkles, Plus, MessageSquare, X, Trash2, Copy, Check, Home } from "lucide-react";
+import { Brain, Send, Loader2, Menu, LogOut, User, Zap, BookOpen, RotateCcw, Sparkles, Plus, MessageSquare, X, Trash2, Copy, Check, LayoutDashboard } from "lucide-react";
 import { api, Conversation, Message } from "@/lib/api";
 import { toast } from "sonner";
 import { APP_LOGO } from "@/const";
@@ -814,17 +814,17 @@ export default function Chat() {
         <div className="flex items-center justify-around max-w-md mx-auto py-1">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => setLocation("/")}
-            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
+            onClick={() => setLocation("/dashboard")}
+            className="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500 hover:text-primary transition-colors"
           >
-            <Home className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Início</span>
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Painel</span>
           </motion.button>
           
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
+            className="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500 hover:text-primary transition-colors"
           >
             <MessageSquare className="h-5 w-5" />
             <span className="text-[10px] font-medium">Conversas</span>
@@ -834,7 +834,7 @@ export default function Chat() {
             whileTap={{ scale: 0.9 }}
             onClick={handleNewConversation}
             disabled={creating}
-            className="flex flex-col items-center gap-0.5 py-2 px-4"
+            className="flex flex-col items-center gap-0.5 py-2 px-3"
           >
             <div className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30 border-4 border-white">
               {creating ? (
@@ -854,7 +854,7 @@ export default function Chat() {
               setMode(modes[nextIndex]);
               toast.success(`Modo: ${MODES.find(m => m.value === modes[nextIndex])?.label}`);
             }}
-            className="flex flex-col items-center gap-0.5 py-2 px-4 text-gray-500 hover:text-primary transition-colors"
+            className="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500 hover:text-primary transition-colors"
           >
             {(() => {
               const ModeIcon = MODES.find(m => m.value === mode)?.icon || Zap;
