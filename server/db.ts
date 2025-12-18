@@ -31,6 +31,32 @@ export async function runMigrations() {
   console.log("[Migration] Running schema migrations...");
 
   try {
+    // Create enums if they don't exist
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE role AS ENUM ('user', 'admin', 'super_admin');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
+    
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE plan AS ENUM ('free', 'student', 'student_plus', 'family');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
+    
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE subscription_status AS ENUM ('active', 'expired', 'cancelled');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
+    console.log("[Migration] Enums ensured");
+
     // Ensure users table exists with all columns
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -42,9 +68,9 @@ export async function runMigrations() {
         email_verified BOOLEAN DEFAULT false NOT NULL,
         verification_token VARCHAR(255),
         login_method VARCHAR(64),
-        role VARCHAR(20) DEFAULT 'user' NOT NULL,
-        plan VARCHAR(20) DEFAULT 'free' NOT NULL,
-        subscription_status VARCHAR(20) DEFAULT 'active' NOT NULL,
+        role role DEFAULT 'user' NOT NULL,
+        plan plan DEFAULT 'free' NOT NULL,
+        subscription_status subscription_status DEFAULT 'active' NOT NULL,
         subscription_expires_at TIMESTAMP WITH TIME ZONE,
         monthly_questions_used INTEGER DEFAULT 0 NOT NULL,
         last_question_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
