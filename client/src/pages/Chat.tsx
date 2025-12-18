@@ -348,7 +348,7 @@ export default function Chat() {
   const ModeIcon = currentMode?.icon || Brain;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-[100dvh] overflow-hidden bg-gray-50">
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -356,16 +356,17 @@ export default function Chat() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-md"
             onClick={() => setSidebarOpen(false)}
           />
         )}
       </AnimatePresence>
       
-      <div
-        className={`${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed lg:relative inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0`}
+      <motion.div
+        initial={false}
+        animate={{ x: sidebarOpen ? 0 : "-100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed lg:relative inset-y-0 left-0 z-50 w-72 lg:w-64 flex flex-col border-r border-gray-200 bg-white lg:translate-x-0"
       >
         <div className="flex h-20 items-center justify-between border-b border-gray-200 px-4">
           <img
@@ -456,9 +457,9 @@ export default function Chat() {
             </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col pb-16 lg:pb-0">
         <header className="flex h-14 lg:h-20 items-center justify-between border-b border-gray-200 bg-white px-3 lg:px-6 safe-area-top">
           <div className="flex items-center gap-2 lg:gap-4">
             <Button
