@@ -465,9 +465,13 @@ export async function addMessage(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  const now = new Date();
   await db.insert(messages).values({
-    ...data,
+    conversationId: data.conversationId,
     role: data.role as any,
+    content: data.content,
+    tokens: data.tokens,
+    createdAt: now,
   });
 
   await db

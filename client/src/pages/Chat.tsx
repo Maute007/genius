@@ -291,10 +291,19 @@ export default function Chat() {
       try {
         await api.conversations.delete(convId);
         toast.success("Conversa apagada!");
-        await loadConversations();
+        
+        const remainingConversations = conversations.filter(c => c.id !== convId);
+        setConversations(remainingConversations);
+        
         if (conversationId === convId) {
-          setConversationId(null);
-          setMessages([]);
+          if (remainingConversations.length > 0) {
+            const nextConv = remainingConversations[0];
+            setConversationId(nextConv.id);
+            setMode(nextConv.mode);
+          } else {
+            setConversationId(null);
+            setMessages([]);
+          }
         }
       } catch (error: any) {
         toast.error(error.message);
