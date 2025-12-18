@@ -1,0 +1,411 @@
+Genius API REST - Documentação Completa
+Versão: 1.0.0
+Base URL: https://genius-app.com/api/v1
+Autenticação: API Key (header X-API-Key)
+
+
+
+📋 Índice
+1Autenticação
+2Conversas
+3Mensagens
+4Perfis
+5Exemplos cURL
+6Códigos de Erro
+
+
+
+Autenticação
+Todos os endpoints requerem autenticação via API Key.
+
+Header Obrigatório:
+X-API-Key: sua-chave-api-aqui
+
+Exemplo:
+curl -H "X-API-Key: seu-api-key" https://genius-app.com/api/v1/conversations
+
+
+
+Conversas
+GET /conversations
+Listar todas as conversas do utilizador.
+
+Método: GET
+Autenticação: Obrigatória
+Parâmetros: Nenhum
+
+Resposta (200):
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "userId": 123,
+      "profileId": 123,
+      "title": "Álgebra - Equações",
+      "mode": "quick_doubt",
+      "subject": "Matemática",
+      "topic": "Equações do 2º grau",
+      "isActive": true,
+      "createdAt": "2025-12-09T10:30:00Z",
+      "updatedAt": "2025-12-09T10:30:00Z"
+    }
+  ],
+  "count": 1
+}
+
+
+
+GET /conversations/:id
+Obter uma conversa específica.
+
+Método: GET
+Autenticação: Obrigatória
+Parâmetros:
+•id (path) - ID da conversa
+
+Resposta (200):
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "userId": 123,
+    "profileId": 123,
+    "title": "Álgebra - Equações",
+    "mode": "quick_doubt",
+    "subject": "Matemática",
+    "topic": "Equações do 2º grau",
+    "isActive": true,
+    "createdAt": "2025-12-09T10:30:00Z",
+    "updatedAt": "2025-12-09T10:30:00Z"
+  }
+}
+
+Resposta (404):
+{
+  "success": false,
+  "error": "Conversation not found"
+}
+
+
+
+POST /conversations
+Criar uma nova conversa.
+
+Método: POST
+Autenticação: Obrigatória
+Content-Type: application/json
+
+Body:
+{
+  "title": "Álgebra - Equações",
+  "mode": "quick_doubt"
+}
+
+Parâmetros:
+•title (string, obrigatório) - Título da conversa
+•mode (string, obrigatório) - Modo: quick_doubt, exam_prep, revision, free_learning
+
+Resposta (201):
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "userId": 123,
+    "title": "Álgebra - Equações",
+    "mode": "quick_doubt",
+    "createdAt": "2025-12-09T10:35:00Z"
+  }
+}
+
+
+
+PUT /conversations/:id
+Atualizar uma conversa.
+
+Método: PUT
+Autenticação: Obrigatória
+Content-Type: application/json
+
+Body:
+{
+  "title": "Álgebra - Equações Quadráticas",
+  "mode": "exam_prep"
+}
+
+Parâmetros:
+•title (string, opcional) - Novo título
+•mode (string, opcional) - Novo modo
+
+Resposta (200):
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Álgebra - Equações Quadráticas",
+    "mode": "exam_prep",
+    "updatedAt": "2025-12-09T10:40:00Z"
+  }
+}
+
+
+
+DELETE /conversations/:id
+Deletar uma conversa (e todas as suas mensagens).
+
+Método: DELETE
+Autenticação: Obrigatória
+Parâmetros:
+•id (path) - ID da conversa
+
+Resposta (200):
+{
+  "success": true,
+  "message": "Conversation deleted successfully"
+}
+
+
+
+Mensagens
+GET /conversations/:conversationId/messages
+Listar todas as mensagens de uma conversa.
+
+Método: GET
+Autenticação: Obrigatória
+Parâmetros:
+•conversationId (path) - ID da conversa
+
+Resposta (200):
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "conversationId": 1,
+      "role": "user",
+      "content": "O que é uma equação quadrática?",
+      "tokens": 10,
+      "createdAt": "2025-12-09T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "conversationId": 1,
+      "role": "assistant",
+      "content": "Uma equação quadrática é...",
+      "tokens": 50,
+      "createdAt": "2025-12-09T10:30:30Z"
+    }
+  ],
+  "count": 2
+}
+
+
+
+POST /conversations/:conversationId/messages
+Adicionar uma mensagem a uma conversa.
+
+Método: POST
+Autenticação: Obrigatória
+Content-Type: application/json
+
+Body:
+{
+  "content": "O que é uma equação quadrática?",
+  "role": "user"
+}
+
+Parâmetros:
+•content (string, obrigatório) - Conteúdo da mensagem
+•role (string, obrigatório) - Papel: user ou assistant
+
+Resposta (201):
+{
+  "success": true,
+  "data": {
+    "id": 3,
+    "conversationId": 1,
+    "role": "user",
+    "content": "O que é uma equação quadrática?",
+    "createdAt": "2025-12-09T10:35:00Z"
+  }
+}
+
+
+
+PUT /conversations/:conversationId/messages/:messageId
+Atualizar uma mensagem.
+
+Método: PUT
+Autenticação: Obrigatória
+Content-Type: application/json
+
+Body:
+{
+  "content": "O que é uma equação quadrática? (editado)"
+}
+
+Parâmetros:
+•content (string, obrigatório) - Novo conteúdo
+
+Resposta (200):
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "content": "O que é uma equação quadrática? (editado)"
+  }
+}
+
+
+
+DELETE /conversations/:conversationId/messages/:messageId
+Deletar uma mensagem.
+
+Método: DELETE
+Autenticação: Obrigatória
+Parâmetros:
+•conversationId (path) - ID da conversa
+•messageId (path) - ID da mensagem
+
+Resposta (200):
+{
+  "success": true,
+  "message": "Message deleted successfully"
+}
+
+
+
+Perfis
+GET /profiles/:userId
+Obter perfil do utilizador.
+
+Método: GET
+Autenticação: Obrigatória
+Parâmetros:
+•userId (path) - ID do utilizador
+
+Resposta (200):
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "openId": "user-123",
+    "name": "João Silva",
+    "email": "joao@example.com",
+    "role": "user",
+    "plan": "student",
+    "subscriptionStatus": "active",
+    "createdAt": "2025-12-01T00:00:00Z"
+  }
+}
+
+
+
+PUT /profiles/:userId
+Atualizar perfil do utilizador.
+
+Método: PUT
+Autenticação: Obrigatória
+Content-Type: application/json
+
+Body:
+{
+  "name": "João Silva Atualizado",
+  "email": "joao.novo@example.com"
+}
+
+Parâmetros:
+•name (string, opcional) - Novo nome
+•email (string, opcional) - Novo email
+
+Resposta (200):
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "name": "João Silva Atualizado",
+    "email": "joao.novo@example.com",
+    "updatedAt": "2025-12-09T10:45:00Z"
+  }
+}
+
+
+
+Exemplos cURL
+Listar conversas
+curl -X GET \
+  https://genius-app.com/api/v1/conversations \
+  -H "X-API-Key: sua-chave-api"
+
+Criar conversa
+curl -X POST \
+  https://genius-app.com/api/v1/conversations \
+  -H "X-API-Key: sua-chave-api" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Álgebra - Equações",
+    "mode": "quick_doubt"
+  }'
+
+Adicionar mensagem
+curl -X POST \
+  https://genius-app.com/api/v1/conversations/1/messages \
+  -H "X-API-Key: sua-chave-api" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "O que é uma equação quadrática?",
+    "role": "user"
+  }'
+
+Listar mensagens
+curl -X GET \
+  https://genius-app.com/api/v1/conversations/1/messages \
+  -H "X-API-Key: sua-chave-api"
+
+Atualizar conversa
+curl -X PUT \
+  https://genius-app.com/api/v1/conversations/1 \
+  -H "X-API-Key: sua-chave-api" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Álgebra - Equações Quadráticas"
+  }'
+
+Deletar conversa
+curl -X DELETE \
+  https://genius-app.com/api/v1/conversations/1 \
+  -H "X-API-Key: sua-chave-api"
+
+
+
+Códigos de Erro
+Código	Significado	Exemplo
+200	OK - Requisição bem-sucedida	GET, PUT, DELETE
+201	Created - Recurso criado com sucesso	POST
+400	Bad Request - Parâmetros inválidos	Falta campo obrigatório
+401	Unauthorized - API key inválida	Header X-API-Key ausente
+403	Forbidden - Acesso negado	Tentar acessar recurso de outro utilizador
+404	Not Found - Recurso não encontrado	Conversa/mensagem não existe
+500	Internal Server Error - Erro do servidor	Erro inesperado
+
+
+Resposta de Erro Padrão
+{
+  "success": false,
+  "error": "Descrição do erro"
+}
+
+
+
+Notas Importantes
+7Autenticação: Todos os endpoints requerem o header X-API-Key
+8Segurança: Não compartilhe sua API key publicamente
+9Rate Limiting: Implementar rate limiting em produção (em breve)
+10Paginação: Implementar paginação para listas grandes (em breve)
+11Validação: Todos os inputs são validados no servidor
+12Timestamps: Todos os timestamps estão em ISO 8601 (UTC)
+
+
+
+Suporte
+Para suporte técnico, contacte: support@genius.mz
