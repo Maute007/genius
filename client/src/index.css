@@ -288,6 +288,7 @@ html, body {
 }
 
 .chat-markdown pre {
+  width: 100%;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -296,8 +297,7 @@ html, body {
 }
 
 .chat-markdown pre code {
-  display: inline-block;
-  min-width: max-content;
+  display: block;
 }
 
 .chat-markdown code:not(pre code) {

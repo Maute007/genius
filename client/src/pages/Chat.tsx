@@ -80,20 +80,22 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
                   ol: ({ children }) => <ol className="mb-3 ml-5 list-decimal space-y-1.5 text-sm sm:text-base">{children}</ol>,
                   li: ({ children }) => <li className="leading-relaxed break-words">{children}</li>,
                   code: ({ className, children }) => {
-                    const isInline = !className;
-                    return isInline ? (
-                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800 break-words">
+                    const isBlock = className?.includes('language-');
+                    return isBlock ? (
+                      <code className="block font-mono text-xs sm:text-sm whitespace-pre">
                         {children}
                       </code>
                     ) : (
-                      <code className="block font-mono text-xs sm:text-sm whitespace-pre min-w-max">
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800 break-words">
                         {children}
                       </code>
                     );
                   },
                   pre: ({ children }) => (
-                    <pre className="mb-3 rounded-lg bg-gray-900 p-3 text-gray-100 overflow-x-auto max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
-                      {children}
+                    <pre className="mb-3 rounded-lg bg-gray-900 p-3 text-gray-100 overflow-x-auto w-full max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+                      <div className="inline-block min-w-full">
+                        {children}
+                      </div>
                     </pre>
                   ),
                   blockquote: ({ children }) => (
