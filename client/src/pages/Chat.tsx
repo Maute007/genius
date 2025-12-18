@@ -60,42 +60,43 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
           <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
         </motion.div>
       )}
-      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] min-w-0">
+      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] min-w-0 w-auto">
         <div
-          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 overflow-hidden ${
+          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 ${
             msg.role === "user"
               ? "bg-primary text-white shadow-lg shadow-primary/20"
               : "bg-white border border-gray-200 text-gray-900 shadow-sm"
           }`}
         >
           {msg.role === "assistant" ? (
-            <div className="chat-markdown min-w-0 w-full">
+            <div className="chat-markdown">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm sm:text-base break-words">{children}</p>,
+                  p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm sm:text-base whitespace-normal">{children}</p>,
                   strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
                   em: ({ children }) => <em className="italic">{children}</em>,
                   ul: ({ children }) => <ul className="mb-3 ml-5 list-disc space-y-1.5 text-sm sm:text-base">{children}</ul>,
                   ol: ({ children }) => <ol className="mb-3 ml-5 list-decimal space-y-1.5 text-sm sm:text-base">{children}</ol>,
-                  li: ({ children }) => <li className="leading-relaxed break-words">{children}</li>,
-                  code: ({ className, children }) => {
-                    const isBlock = className?.includes('language-');
-                    return isBlock ? (
+                  li: ({ children }) => <li className="leading-relaxed whitespace-normal">{children}</li>,
+                  code: ({ className, children, ...props }) => {
+                    const isBlock = className?.includes('language-') || (props.node?.position?.start.line !== props.node?.position?.end.line);
+                    if (!isBlock) {
+                      return (
+                        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800">
+                          {children}
+                        </code>
+                      );
+                    }
+                    return (
                       <code className="block font-mono text-xs sm:text-sm whitespace-pre">
-                        {children}
-                      </code>
-                    ) : (
-                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:text-sm font-mono text-gray-800 break-words">
                         {children}
                       </code>
                     );
                   },
                   pre: ({ children }) => (
-                    <pre className="mb-3 rounded-lg bg-gray-900 p-3 text-gray-100 overflow-x-auto w-full max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
-                      <div className="inline-block min-w-full">
-                        {children}
-                      </div>
+                    <pre className="mb-3 rounded-lg bg-gray-900 p-3 text-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                      {children}
                     </pre>
                   ),
                   blockquote: ({ children }) => (
@@ -112,7 +113,7 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
               </ReactMarkdown>
             </div>
           ) : (
-            <p className="leading-relaxed text-sm sm:text-base break-words">{msg.content}</p>
+            <p className="leading-relaxed text-sm sm:text-base">{msg.content}</p>
           )}
         </div>
         <div className={`flex items-center gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
