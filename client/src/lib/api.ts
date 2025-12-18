@@ -187,12 +187,15 @@ export const api = {
   chat: {
     send: async (
       message: string, 
-      conversationId: number
-    ) => {
-      return trpcCall<{ message: string }>("chat.sendMessage", { 
+      conversationId: number,
+      history?: Array<{ role: string; content: string }>,
+      userProfile?: any
+    ): Promise<{ message: string; content: string }> => {
+      const result = await trpcCall<{ message: string }>("chat.sendMessage", { 
         message, 
         conversationId 
       }, "mutation");
+      return { message: result.message, content: result.message };
     },
     
     createConversation: async (mode: string) => {
@@ -255,6 +258,43 @@ export const api = {
     
     getInsights: async () => {
       return trpcCall("dashboard.personalizedInsights", null, "query");
+    },
+  },
+
+  conversations: {
+    list: async (): Promise<Conversation[]> => {
+      return trpcCall<Conversation[]>("conversations.list", null, "query");
+    },
+    
+    get: async (id: number) => {
+      return trpcCall("conversations.get", { id }, "query");
+    },
+    
+    create: async (data: { title?: string; mode: string; subject?: string; topic?: string }): Promise<Conversation> => {
+      return trpcCall<Conversation>("conversations.create", { 
+        mode: data.mode as "quick_doubt" | "exam_prep" | "revision" | "free_learning", 
+        subject: data.subject, 
+        topic: data.topic 
+      }, "mutation");
+    },
+    
+    update: async (id: number, data: { title?: string }) => {
+      return trpcCall("chat.updateConversationTitle", { conversationId: id, title: data.title }, "mutation");
+    },
+    
+    delete: async (id: number) => {
+      return trpcCall("conversations.delete", { id }, "mutation");
+    },
+  },
+
+  messages: {
+    list: async (conversationId: number): Promise<Message[]> => {
+      return trpcCall<Message[]>("messages.list", conversationId, "query");
+    },
+    
+    create: async (conversationId: number, data: { content: string; role: string }): Promise<void> => {
+      // Messages are created via chat.sendMessage - this is a no-op for client-side message tracking
+      return;
     },
   },
 };

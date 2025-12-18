@@ -240,7 +240,7 @@ export default function Chat() {
         province: user.province,
       } : undefined;
 
-      const aiResponse = await api.chat.send(userContent, mode, history, userProfile);
+      const aiResponse = await api.chat.send(userContent, conversationId, history, userProfile);
 
       await api.messages.create(conversationId, {
         content: aiResponse.content,
