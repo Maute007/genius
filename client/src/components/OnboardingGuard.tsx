@@ -27,10 +27,9 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
       }
 
       try {
-        const userId = parseInt(user.id, 10);
-        const profile = await api.profiles.get(userId);
+        const profile = await api.profile.get() as { onboardingCompleted?: boolean; name?: string; age?: number; grade?: string; interests?: string; province?: string } | null;
         
-        if (profile.onboardingCompleted) {
+        if (profile?.onboardingCompleted) {
           const updatedUser = {
             ...user,
             name: profile.name || user.name,
