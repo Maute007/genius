@@ -33,11 +33,18 @@ app.use('/api/trpc', trpcExpress.createExpressMiddleware({
 app.use('/api/v1', apiKeyAuth, apiRoutes);
 
 if (isProduction) {
-  const clientDist = path.join(__dirname, '..', 'dist', 'public');
+  const clientDist = path.resolve(process.cwd(), 'dist', 'public');
+  console.log(`[Server] Serving static files from: ${clientDist}`);
   app.use(express.static(clientDist));
   
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
+    const indexPath = path.join(clientDist, 'index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('[Server] Error sending index.html:', err);
+        res.status(500).send('Internal Server Error');
+      }
+    });
   });
 } else {
   app.use(notFoundHandler);

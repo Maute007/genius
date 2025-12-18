@@ -63,36 +63,60 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        // Find or create school
-        const school = await db.findOrCreateSchool({
-          name: input.schoolName,
-          type: input.schoolType,
-          province: input.province,
-          city: input.city,
-        });
+        try {
+          console.log(`[Profile] Upsert started for user ${ctx.user.id}`);
+          
+          // Find or create school
+          let school;
+          try {
+            school = await db.findOrCreateSchool({
+              name: input.schoolName,
+              type: input.schoolType,
+              province: input.province,
+              city: input.city,
+            });
+            console.log(`[Profile] School found/created: ${school?.id}`);
+          } catch (schoolError) {
+            console.error("[Profile] Error with school:", schoolError);
+            // Continue without school - not critical for profile save
+            school = null;
+          }
 
-        // Check if profile exists
-        const existing = await db.getProfileByUserId(ctx.user.id);
+          // Check if profile exists
+          const existing = await db.getProfileByUserId(ctx.user.id);
+          console.log(`[Profile] Existing profile: ${existing ? 'yes' : 'no'}`);
 
-        if (existing) {
-          // Update existing profile
-          await db.updateProfile(ctx.user.id, {
-            ...input,
-            onboardingCompleted: true,
-          });
-        } else {
-          // Create new profile
-          await db.createProfile({
-            userId: ctx.user.id,
-            ...input,
-            onboardingCompleted: true,
-          });
+          if (existing) {
+            // Update existing profile
+            await db.updateProfile(ctx.user.id, {
+              ...input,
+              onboardingCompleted: true,
+            });
+            console.log(`[Profile] Profile updated for user ${ctx.user.id}`);
+          } else {
+            // Create new profile
+            await db.createProfile({
+              userId: ctx.user.id,
+              ...input,
+              onboardingCompleted: true,
+            });
+            console.log(`[Profile] Profile created for user ${ctx.user.id}`);
 
-          // Increment school student count
-          await db.incrementSchoolStudents(school.id);
+            // Increment school student count (only if school exists)
+            if (school?.id) {
+              try {
+                await db.incrementSchoolStudents(school.id);
+              } catch (incrementError) {
+                console.error("[Profile] Error incrementing school students:", incrementError);
+              }
+            }
+          }
+
+          return { success: true };
+        } catch (error) {
+          console.error("[Profile] Upsert error:", error);
+          throw error;
         }
-
-        return { success: true };
       }),
 
     // Search schools for autocomplete
