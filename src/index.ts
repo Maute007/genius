@@ -8,7 +8,7 @@ import apiRoutes from './routes/index.js';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from '../server/routers';
 import { createContext } from '../server/_core/context';
-import { runMigrations } from '../server/db';
+import { runMigrations, ensureDbReady } from '../server/db';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,8 +54,22 @@ app.use(errorHandler);
 
 async function startServer(): Promise<void> {
   try {
+    console.log(`[Server] Starting in ${isProduction ? 'production' : 'development'} mode...`);
+    
+    // Initialize Sequelize models
     await initializeDatabase();
+    
+    // Wait for Drizzle database connection
+    const dbReady = await ensureDbReady();
+    if (!dbReady) {
+      console.error('[Server] Failed to connect to database after retries');
+      process.exit(1);
+    }
+    
+    // Run migrations
     await runMigrations();
+    
+    console.log(`[Server] Database initialization complete`);
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`[Server] Running on http://0.0.0.0:${PORT}`);

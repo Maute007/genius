@@ -5,6 +5,7 @@ import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _migrationRan = false;
+let _dbReady = false;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
@@ -16,6 +17,37 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function ensureDbReady(): Promise<boolean> {
+  if (_dbReady) return true;
+  
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const db = await getDb();
+      if (!db) {
+        console.warn(`[Database] No database URL configured`);
+        return false;
+      }
+      
+      await db.execute(sql`SELECT 1`);
+      _dbReady = true;
+      console.log(`[Database] Connection verified (attempt ${attempt})`);
+      return true;
+    } catch (error) {
+      console.error(`[Database] Connection attempt ${attempt} failed:`, error);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+  
+  return false;
+}
+
+export function isDbReady(): boolean {
+  return _dbReady;
 }
 
 export async function runMigrations() {
