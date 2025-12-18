@@ -283,6 +283,7 @@ html, body {
 .chat-markdown {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .chat-markdown p,
@@ -297,6 +298,7 @@ html, body {
   overflow-wrap: anywhere;
   word-wrap: break-word;
   word-break: break-word;
+  max-width: 100%;
 }
 
 .chat-markdown pre {
@@ -304,6 +306,8 @@ html, body {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  max-width: 100%;
+  width: 100%;
 }
 
 .chat-markdown pre code {

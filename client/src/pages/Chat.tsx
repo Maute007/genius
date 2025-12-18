@@ -60,16 +60,16 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
           <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
         </motion.div>
       )}
-      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] min-w-0 w-auto">
+      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] min-w-0">
         <div
-          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 ${
+          className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 max-w-full overflow-hidden ${
             msg.role === "user"
               ? "bg-primary text-white shadow-lg shadow-primary/20"
               : "bg-white border border-gray-200 text-gray-900 shadow-sm"
           }`}
         >
           {msg.role === "assistant" ? (
-            <div className="chat-markdown">
+            <div className="chat-markdown max-w-full overflow-hidden">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
