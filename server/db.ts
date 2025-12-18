@@ -181,13 +181,21 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       
       await db.update(users).set(updateSet).where(eq(users.openId, user.openId));
     } else {
+      const now = new Date();
       const values: InsertUser = {
         openId: user.openId,
         name: user.name ?? null,
         email: user.email ?? null,
         loginMethod: user.loginMethod ?? null,
-        lastSignedIn: user.lastSignedIn ?? new Date(),
+        emailVerified: false,
         role: user.role ?? (user.openId === ENV.ownerOpenId ? 'admin' : 'user'),
+        plan: "free",
+        subscriptionStatus: "active",
+        monthlyQuestionsUsed: 0,
+        lastQuestionResetAt: now,
+        createdAt: now,
+        updatedAt: now,
+        lastSignedIn: user.lastSignedIn ?? now,
       };
       
       await db.insert(users).values(values);
@@ -222,7 +230,12 @@ export async function createProfile(profile: InsertProfile) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(profiles).values(profile).returning();
+  const now = new Date();
+  const result = await db.insert(profiles).values({
+    ...profile,
+    createdAt: now,
+    updatedAt: now,
+  }).returning();
   return result[0];
 }
 
@@ -582,16 +595,23 @@ export async function createUser(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  const now = new Date();
   const result = await db.insert(users).values({
     openId: data.openId,
     name: data.name,
     email: data.email,
     password: data.password,
-    emailVerified: data.emailVerified,
+    emailVerified: data.emailVerified ?? false,
     verificationToken: data.verificationToken,
     loginMethod: data.loginMethod,
-    role: data.role,
-    plan: data.plan,
+    role: data.role ?? "user",
+    plan: data.plan ?? "free",
+    subscriptionStatus: "active",
+    monthlyQuestionsUsed: 0,
+    lastQuestionResetAt: now,
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
   }).returning();
 
   return result[0];
