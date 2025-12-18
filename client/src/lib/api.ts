@@ -24,12 +24,21 @@ export interface Message {
 export interface Profile {
   id: number;
   userId: number;
-  name: string | null;
+  fullName: string | null;
   email: string | null;
+  whatsapp: string | null;
   age: number | null;
   grade: string | null;
-  interests: string | null;
+  interests: string[] | null;
+  otherInterests: string | null;
+  learningStyle: string | null;
+  learningPreferences: string[] | null;
+  challenges: string | null;
+  studyGoals: string | null;
+  schoolName: string | null;
+  schoolType: string | null;
   province: string | null;
+  city: string | null;
   onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -220,12 +229,28 @@ export const api = {
   },
 
   profile: {
-    get: async () => {
-      return trpcCall("profile.get", null, "query");
+    get: async (): Promise<Profile | null> => {
+      return trpcCall<Profile | null>("profile.get", null, "query");
     },
     
-    update: async (data: any) => {
-      return trpcCall("profile.upsert", data, "mutation");
+    update: async (data: {
+      fullName: string;
+      age: number;
+      grade: string;
+      interests: string[];
+      province: string;
+      city: string;
+      schoolName: string;
+      schoolType: "self_learner" | "non_student" | "public_school" | "private_school" | "public_university" | "private_university" | "technical_institute" | "other";
+      email?: string;
+      whatsapp?: string;
+      otherInterests?: string;
+      learningStyle?: string;
+      learningPreferences?: string[];
+      challenges?: string;
+      studyGoals?: string;
+    }): Promise<Profile> => {
+      return trpcCall<Profile>("profile.upsert", data, "mutation");
     },
     
     searchSchools: async (query: string) => {

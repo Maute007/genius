@@ -34,16 +34,15 @@ export function ProtectedRoute({
       }
 
       try {
-        const userId = parseInt(user.id, 10);
-        const profile = await api.profiles.get(userId);
+        const profile = await api.profile.get();
         
-        if (profile.onboardingCompleted) {
+        if (profile?.onboardingCompleted) {
           const updatedUser = {
             ...user,
-            name: profile.name || user.name,
+            name: profile.fullName || user.name,
             age: profile.age || undefined,
             grade: profile.grade || undefined,
-            interests: profile.interests || undefined,
+            interests: profile.interests?.join(", ") || undefined,
             province: profile.province || undefined,
             onboardingCompleted: true,
           };
