@@ -1,0 +1,65 @@
+2025-12-18T07:23:44Z info: Deployment: 04f285e6-5453-428b-81cb-a28b3551a59c
+2025-12-18T07:23:44Z info: Build: 414450cb-426e-493d-858c-8ecac64771b1
+2025-12-18T07:23:44Z info: Running Security Scan
+2025-12-18T07:24:05Z info: Security Scan Complete
+2025-12-18T07:24:06Z info: Preparing development database schema
+2025-12-18T07:24:22Z info: Successfully copied development database schema to production database
+2025-12-18T07:24:22Z info: Connecting to builder
+2025-12-18T07:24:22Z info: Builder connected
+2025-12-18T07:24:22Z info: Installing packages
+--> pnpm install
+
+
+   ╭───────────────────────────────────────────────────────────────────╮
+   │                                                                   │
+   │                Update available! 10.4.1 → 10.26.0.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.26.0   │
+   │                 Run "pnpm add -g pnpm" to update.                 │
+   │                                                                   │
+   ╰───────────────────────────────────────────────────────────────────╯
+
+
+Lockfile is up to date, resolution step is skipped
+
+Already up to date
+
+Done in 4.5s using pnpm v10.4.1
+
+2025-12-18T07:24:29Z info: Starting Build
+
+> genius@1.0.0 build
+> vite build
+
+
+vite v7.1.9 building for production...
+
+(!) %VITE_ANALYTICS_ENDPOINT% is not defined in env variables found in /index.html. Is the variable mistyped?
+
+(!) %VITE_ANALYTICS_WEBSITE_ID% is not defined in env variables found in /index.html. Is the variable mistyped?
+
+transforming...
+
+✓ 2426 modules transformed.
+
+[plugin vite:reporter] 
+(!) /home/runner/workspace/client/src/lib/api.ts is dynamically imported by /home/runner/workspace/client/src/_core/hooks/useGeniusAuth.ts, /home/runner/workspace/client/src/_core/hooks/useGeniusAuth.ts, /home/runner/workspace/client/src/pages/Login.tsx, /home/runner/workspace/client/src/pages/Register.tsx but also statically imported by /home/runner/workspace/client/src/components/ProtectedRoute.tsx, /home/runner/workspace/client/src/pages/Chat.tsx, /home/runner/workspace/client/src/pages/Dashboard.tsx, /home/runner/workspace/client/src/pages/Onboarding.tsx, dynamic import will not move module into another chunk.
+
+
+✓ built in 9.57s
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.7.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+npm notice To update run: npm install -g npm@11.7.0
+npm notice
+
+2025-12-18T07:24:41Z info: Pushing pid1 binary layer...
+2025-12-18T07:24:42Z info: Pushing Repl layer...
+2025-12-18T07:24:42Z info: Pushing hosting layer...
+2025-12-18T07:24:42Z info: Retrieved cached nix layer
+2025-12-18T07:24:43Z info: Created hosting layer
+2025-12-18T07:24:43Z info: Created pid1 binary layer
+2025-12-18T07:25:24Z info: Created Repl layer
+2025-12-18T07:25:26Z info: Pushed image manifest
+2025-12-18T07:25:28Z info: Pushed soci index manifest
+2025-12-18T07:25:31Z info: Creating Autoscale service
