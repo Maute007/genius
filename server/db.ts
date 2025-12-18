@@ -409,14 +409,22 @@ export async function createConversation(data: {
   mode: string;
   subject?: string;
   topic?: string;
+  title?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  const now = new Date();
   const created = await db.insert(conversations).values({
-    ...data,
+    userId: data.userId,
+    profileId: data.profileId,
     mode: data.mode as any,
+    title: data.title || "Nova conversa",
+    subject: data.subject,
+    topic: data.topic,
     isActive: true,
+    createdAt: now,
+    updatedAt: now,
   }).returning();
 
   return created[0];
