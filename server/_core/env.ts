@@ -7,8 +7,8 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
-  // Claude API Configuration
-  claudeApiKey: process.env.CLAUDE_API_KEY ?? "",
+  // Claude API Configuration (using ANTHROPIC_API_KEY from integrations)
+  claudeApiKey: process.env.ANTHROPIC_API_KEY ?? process.env.CLAUDE_API_KEY ?? "",
   claudeModel: process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022",
   claudeApiVersion: process.env.CLAUDE_API_VERSION ?? "2023-06-01",
 };
