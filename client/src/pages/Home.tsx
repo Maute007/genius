@@ -432,12 +432,12 @@ export default function Home() {
                 key={i}
                 variants={scaleIn}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="text-center"
+                className="text-center p-4 md:p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-primary/30 transition-all duration-300"
               >
-                <div className="mb-1 md:mb-2 font-['Playfair_Display'] text-2xl sm:text-4xl md:text-5xl font-bold text-primary">
+                <div className="mb-1 md:mb-2 font-['Playfair_Display'] text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-teal-300 bg-clip-text text-transparent">
                   <CountUp end={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-400">{stat.label}</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-400 font-medium">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -475,19 +475,20 @@ export default function Home() {
                 variants={fadeInUp}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                className="group rounded-2xl border border-gray-200 bg-white p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20"
+                className="group relative rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50/50 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 overflow-hidden"
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <motion.div
-                  className="mb-4 md:mb-6 flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20"
+                  className="relative mb-4 md:mb-6 flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 transition-all group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20"
                   whileHover={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 0.5 }}
                 >
                   {feature.icon}
                 </motion.div>
-                <h3 className="mb-2 md:mb-3 font-['Playfair_Display'] text-lg md:text-xl font-bold text-gray-900">
+                <h3 className="relative mb-2 md:mb-3 font-['Playfair_Display'] text-lg md:text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-sm md:text-base leading-relaxed text-gray-600">
+                <p className="relative text-sm md:text-base leading-relaxed text-gray-600">
                   {feature.description}
                 </p>
               </motion.div>

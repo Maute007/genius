@@ -291,13 +291,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card/30 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 overflow-x-hidden">
       <AuthHeader />
       
       <div className="pt-20 px-4 sm:container py-6 sm:py-8 max-w-full overflow-x-hidden">
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 truncate">
+            <p className="text-primary font-medium text-sm mb-1">Bem-vindo de volta</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 truncate bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Olá, {profile?.fullName || user?.name || "Estudante"}!
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
@@ -307,7 +308,7 @@ export default function Dashboard() {
           <Button 
             variant="outline" 
             size="sm"
-            className="text-red-600 border-red-200 hover:bg-red-50 shrink-0 self-start"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 shrink-0 self-start transition-all duration-200"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
@@ -333,15 +334,16 @@ export default function Dashboard() {
               {quickActions.map((action, index) => (
                 <Card
                   key={index}
-                  className="p-4 sm:p-6 transition-all cursor-pointer hover:shadow-lg active:scale-[0.98] sm:hover:scale-105"
+                  className="group relative p-4 sm:p-6 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-primary/10 active:scale-[0.98] sm:hover:scale-[1.02] border-transparent hover:border-primary/20 overflow-hidden bg-white"
                   onClick={action.action}
                 >
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className={`p-2.5 sm:p-3 rounded-lg shrink-0 ${action.color}`}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative flex items-start gap-3 sm:gap-4">
+                    <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 transition-all duration-300 group-hover:shadow-lg ${action.color}`}>
                       <action.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-0.5 sm:mb-1 text-sm sm:text-base">{action.title}</h3>
+                      <h3 className="font-semibold mb-0.5 sm:mb-1 text-sm sm:text-base group-hover:text-primary transition-colors">{action.title}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         {action.description}
                       </p>
@@ -352,16 +354,21 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
-              <Card className="p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Estatísticas</h2>
+              <Card className="p-4 sm:p-6 bg-white border-0 shadow-lg shadow-gray-200/50">
+                <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
+                  <div className="h-1 w-1 rounded-full bg-primary"></div>
+                  Estatísticas
+                </h2>
                 <div className="space-y-4">
                   {stats.map((stat, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 transition-colors">
                       <div className="flex items-center gap-3">
-                        <stat.icon className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-muted-foreground">{stat.label}</span>
+                        <div className="p-2 rounded-lg bg-white shadow-sm">
+                          <stat.icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="text-gray-600 font-medium text-sm">{stat.label}</span>
                       </div>
-                      <span className="text-2xl font-bold">{stat.value}</span>
+                      <span className="text-xl font-bold bg-gradient-to-r from-primary to-teal-600 bg-clip-text text-transparent">{stat.value}</span>
                     </div>
                   ))}
                 </div>
@@ -401,16 +408,18 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              <Card className="p-4 sm:p-6">
+              <Card className="p-4 sm:p-6 bg-white border-0 shadow-lg shadow-gray-200/50">
                 <div className="flex items-center justify-between mb-2 gap-2">
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 shrink-0" />
+                    <div className="p-1.5 rounded-lg bg-primary/10">
+                      <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    </div>
                     <h2 className="text-base sm:text-xl font-bold truncate">Histórico</h2>
                   </div>
                   <Button 
                     size="sm"
                     onClick={() => setLocation("/chat")}
-                    className="bg-primary hover:bg-primary/90 shrink-0 text-xs sm:text-sm px-2 sm:px-3"
+                    className="bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shrink-0 text-xs sm:text-sm px-3 sm:px-4 shadow-lg shadow-primary/25"
                   >
                     <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                     Nova

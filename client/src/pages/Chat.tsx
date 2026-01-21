@@ -47,15 +47,15 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
       key={msg.id || index}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={`group flex gap-2 sm:gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
     >
       {msg.role === "assistant" && (
         <motion.div 
-          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200 }}
+          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-lg shadow-primary/10"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
         >
           <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
         </motion.div>
@@ -64,8 +64,8 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
         <div
           className={`rounded-2xl px-4 py-3 sm:px-5 sm:py-3 min-w-0 max-w-full overflow-hidden ${
             msg.role === "user"
-              ? "bg-primary text-white shadow-lg shadow-primary/20"
-              : "bg-white border border-gray-200 text-gray-900 shadow-sm"
+              ? "bg-gradient-to-br from-primary to-teal-500 text-white shadow-xl shadow-primary/25"
+              : "bg-white border border-gray-100 text-gray-900 shadow-lg shadow-gray-100/50"
           }`}
         >
           {msg.role === "assistant" ? (
@@ -128,10 +128,10 @@ function MessageBubble({ msg, index }: { msg: Message; index: number }) {
       </div>
       {msg.role === "user" && (
         <motion.div 
-          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200 }}
+          className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-teal-500 shadow-xl shadow-primary/30"
+          initial={{ scale: 0, rotate: 180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
         >
           <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
         </motion.div>
@@ -759,37 +759,39 @@ export default function Chat() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="border-t border-gray-200 bg-white/95 backdrop-blur-lg p-3 sm:p-4"
+              className="border-t border-gray-100 bg-white/98 backdrop-blur-xl p-3 sm:p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
             >
               <div className="mx-auto flex max-w-3xl gap-2 sm:gap-3 items-end">
-                <textarea
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                  }}
-                  placeholder="Escreve a tua pergunta..."
-                  className="flex-1 min-h-[44px] max-h-[120px] py-2.5 px-3 sm:px-4 text-sm sm:text-base rounded-xl border border-gray-200 bg-gray-50 focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:outline-none resize-none overflow-y-auto"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled={sending}
-                  rows={1}
-                />
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <div className="flex-1 relative">
+                  <textarea
+                    value={message}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    }}
+                    placeholder="Escreve a tua pergunta..."
+                    className="w-full min-h-[48px] max-h-[120px] py-3 px-4 sm:px-5 text-sm sm:text-base rounded-2xl border border-gray-200 bg-gray-50/80 focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 focus:outline-none resize-none overflow-y-auto shadow-inner"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    disabled={sending}
+                    rows={1}
+                  />
+                </div>
+                <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
                   <Button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || sending}
-                    className="bg-gradient-to-r from-primary to-teal-400 hover:from-primary/90 hover:to-teal-400/90 h-11 w-11 sm:h-12 sm:w-12 p-0 shadow-lg shadow-primary/30 rounded-xl"
+                    className="bg-gradient-to-br from-primary via-primary to-teal-500 hover:from-primary hover:via-teal-500 hover:to-teal-400 h-12 w-12 sm:h-14 sm:w-14 p-0 shadow-xl shadow-primary/40 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:shadow-none"
                   >
                     {sending ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <Send className="h-5 w-5" />
+                      <Send className="h-5 w-5 translate-x-0.5" />
                     )}
                   </Button>
                 </motion.div>
